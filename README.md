@@ -45,6 +45,7 @@ danh sách đen.
 | ↩️ Hoàn tiền | Tự động hoàn tiền đơn thanh toán online khi huỷ |
 | 🟢 Realtime (SSE) | Thông báo đẩy tức thì qua Server-Sent Events (fallback polling) |
 | 🗂️ Admin xem chat | Quản trị xem lịch sử chat của đơn để xử lý khiếu nại |
+| 🏪 POS cửa hàng | Nhân viên tạo đơn tại quầy/giao hàng, chọn món nhanh, thu tiền, tự tạo khách theo SĐT |
 
 ## Chạy ở máy local
 

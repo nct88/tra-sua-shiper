@@ -139,6 +139,13 @@ export default function AdminDashboard() {
         <Stat label="Bị chặn" value={String(stats.banned)} />
       </div>
 
+      <Link
+        href="/pos"
+        className="flex items-center justify-center gap-2 rounded-xl bg-boba-600 py-2.5 font-semibold text-white hover:bg-boba-700"
+      >
+        🏪 Mở màn hình POS bán hàng
+      </Link>
+
       <div className="flex flex-wrap gap-2">
         {TABS.map((tb) => (
           <button

@@ -6,12 +6,13 @@ export async function GET() {
   const auth = await requireUser();
   if (auth.error) return auth.error;
 
+  // KHÔNG chọn `phone`: bảng xếp hạng không cần SĐT và để lộ số thật của shiper
+  // cho mọi user đăng nhập là vi phạm mô hình che số (maskPhone) của ứng dụng.
   const shippers = await prisma.user.findMany({
     where: { role: "SHIPPER" },
     select: {
       id: true,
       name: true,
-      phone: true,
       shipperProfile: true,
     },
   });
@@ -20,7 +21,6 @@ export async function GET() {
     .map((s) => ({
       id: s.id,
       name: s.name,
-      phone: s.phone,
       vehicle: s.shipperProfile?.vehicle,
       isOnline: s.shipperProfile?.isOnline ?? false,
       ratingAvg: s.shipperProfile?.ratingAvg ?? 5,

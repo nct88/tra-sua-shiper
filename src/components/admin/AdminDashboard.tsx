@@ -131,8 +131,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <main className="mx-auto max-w-6xl space-y-4 p-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <main className="mx-auto max-w-6xl space-y-3 p-3">
+      <div className="grid grid-cols-4 gap-2">
         <Stat label="Tổng đơn" value={String(stats.totalOrders)} />
         <Stat label="Đã giao" value={String(stats.delivered)} />
         <Stat label="Doanh thu" value={formatVnd(stats.revenue)} />
@@ -327,9 +327,9 @@ function AdminChatModal({ orderId, onClose }: { orderId: string; onClose: () => 
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card text-center">
-      <div className="text-xl font-bold text-boba-700">{value}</div>
-      <div className="text-xs text-gray-500">{label}</div>
+    <div className="stat-card">
+      <div className="text-base font-bold text-boba-700">{value}</div>
+      <div className="text-[10px] leading-tight text-gray-500">{label}</div>
     </div>
   );
 }

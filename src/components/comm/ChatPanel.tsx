@@ -21,9 +21,11 @@ const QUICK = [
 export default function ChatPanel({
   orderId,
   peerName,
+  onClose,
 }: {
   orderId: string;
   peerName: string;
+  onClose?: () => void;
 }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
@@ -63,60 +65,66 @@ export default function ChatPanel({
   }
 
   return (
-    <div className="flex h-80 flex-col rounded-xl border border-boba-200 bg-white">
-      <div className="border-b px-3 py-2 text-sm font-semibold text-boba-700">
-        💬 Nhắn tin với {peerName}
+    <div className="flex h-full flex-col bg-white">
+      {/* Tiêu đề */}
+      <div className="flex items-center justify-between border-b border-boba-100 px-3 py-2">
+        <span className="truncate text-sm font-semibold text-boba-700">
+          💬 {peerName}
+        </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="rounded-full px-2 py-0.5 text-lg text-gray-400 hover:bg-gray-100"
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
+        )}
       </div>
-      <div ref={boxRef} className="flex-1 space-y-2 overflow-y-auto p-3">
+
+      {/* Tin nhắn */}
+      <div ref={boxRef} className="flex-1 space-y-2 overflow-y-auto bg-boba-50/40 p-3">
         {msgs.length === 0 && (
-          <p className="text-center text-xs text-gray-400">
-            Chưa có tin nhắn. Mọi liên lạc đều qua app để bảo mật số điện thoại.
+          <p className="mt-6 text-center text-xs text-gray-400">
+            Chưa có tin nhắn. Mọi liên lạc qua app để bảo mật số điện thoại.
           </p>
         )}
         {msgs.map((m) => (
-          <div
-            key={m.id}
-            className={`flex ${m.mine ? "justify-end" : "justify-start"}`}
-          >
+          <div key={m.id} className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[75%] rounded-2xl px-3 py-1.5 text-sm ${
-                m.mine
-                  ? "bg-boba-600 text-white"
-                  : "bg-boba-100 text-boba-900"
+              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                m.mine ? "rounded-br-sm bg-boba-600 text-white" : "rounded-bl-sm bg-white text-boba-900 shadow-sm"
               }`}
             >
-              {m.body}
-              <div
-                className={`mt-0.5 text-[10px] ${
-                  m.mine ? "text-white/70" : "text-gray-400"
-                }`}
-              >
-                {new Date(m.createdAt).toLocaleTimeString("vi-VN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+              <div className="whitespace-pre-wrap break-words">{m.body}</div>
+              <div className={`mt-0.5 text-[10px] ${m.mine ? "text-white/70" : "text-gray-400"}`}>
+                {new Date(m.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
               </div>
             </div>
           </div>
         ))}
       </div>
-      <div className="flex flex-wrap gap-1 px-2 pb-1">
+
+      {/* Gợi ý nhanh - cuộn ngang 1 hàng */}
+      <div className="flex gap-1.5 overflow-x-auto whitespace-nowrap border-t border-boba-100 px-2 py-1.5">
         {QUICK.map((q) => (
           <button
             key={q}
             onClick={() => send(q)}
-            className="rounded-full border border-boba-200 px-2 py-0.5 text-[11px] text-boba-600 hover:bg-boba-50"
+            className="shrink-0 rounded-full border border-boba-200 px-2.5 py-1 text-xs text-boba-600 hover:bg-boba-50"
           >
             {q}
           </button>
         ))}
       </div>
+
+      {/* Ô nhập */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           send(text);
         }}
-        className="flex gap-2 border-t p-2"
+        className="flex gap-2 border-t border-boba-100 p-2"
       >
         <input
           className="input"
@@ -124,7 +132,7 @@ export default function ChatPanel({
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <button disabled={sending} className="btn-primary text-sm">
+        <button disabled={sending} className="btn-primary shrink-0 text-sm">
           Gửi
         </button>
       </form>

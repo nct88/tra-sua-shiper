@@ -72,30 +72,30 @@ export default function Header({
   }
 
   return (
-    <header className="sticky top-0 z-[1000] flex items-center justify-between border-b border-boba-200 bg-white/90 px-4 py-3 backdrop-blur">
+    <header className="sticky top-0 z-[1000] flex items-center justify-between border-b border-boba-200 bg-white/90 px-3 py-2 backdrop-blur">
       <div className="flex items-center gap-2">
-        <Link href="/" className="text-xl font-bold text-boba-700">
+        <Link href="/" className="text-lg font-bold text-boba-700">
           🧋 Boba Ship
         </Link>
-        <span className="hidden text-sm text-boba-500 sm:inline">/ {title}</span>
+        <span className="hidden text-xs text-boba-500 sm:inline">/ {title}</span>
         <Link
           href="/ho-tro"
-          className="ml-2 hidden text-sm text-boba-600 hover:text-boba-800 sm:inline"
+          className="ml-1 hidden text-xs text-boba-600 hover:text-boba-800 sm:inline"
         >
           Hỗ trợ
         </Link>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {userName && (
           <span className="hidden text-sm text-boba-700 sm:inline">
-            Xin chào, <b>{userName}</b>
+            <b>{userName}</b>
           </span>
         )}
         <div className="relative">
           <button
             onClick={toggle}
-            className="relative rounded-full p-2 hover:bg-boba-100"
+            className="relative rounded-full p-1.5 hover:bg-boba-100"
             aria-label="Thông báo"
           >
             🔔
@@ -136,7 +136,7 @@ export default function Header({
         </div>
         <button
           onClick={logout}
-          className="rounded-lg border border-boba-300 px-3 py-1.5 text-sm text-boba-700 hover:bg-boba-100"
+          className="rounded-lg border border-boba-300 px-2.5 py-1 text-xs text-boba-700 hover:bg-boba-100"
         >
           Đăng xuất
         </button>

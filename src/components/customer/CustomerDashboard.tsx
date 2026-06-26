@@ -154,7 +154,7 @@ export default function CustomerDashboard() {
   const cp = me?.customerProfile;
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 p-4">
+    <main className="mx-auto max-w-6xl space-y-4 p-3">
       {me?.isBlacklisted && (
         <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
           ⚠️ Tài khoản của bạn đang bị hạn chế đặt đơn (danh sách đen). Vui lòng
@@ -189,7 +189,7 @@ export default function CustomerDashboard() {
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Đặt món */}
         <section className="card space-y-3">
           <h2 className="text-lg font-bold text-boba-800">🧋 Thực đơn</h2>

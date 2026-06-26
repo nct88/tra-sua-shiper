@@ -96,7 +96,7 @@ export default function TrackView({
   const sp = t.shipper?.shipperProfile;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-4">
+    <main className="mx-auto max-w-3xl space-y-3 p-3">
       <div className="flex items-center justify-between">
         <Link href={backHref} className="text-sm text-boba-600">← Quay lại</Link>
         <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ export default function TrackView({
       )}
 
       {/* Bản đồ realtime */}
-      <div className="h-80 w-full">
+      <div className="h-60 w-full">
         <Map
           markers={[
             { lat: t.pickup.lat, lng: t.pickup.lng, type: "store", label: t.pickup.name },
@@ -147,18 +147,18 @@ export default function TrackView({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="card text-center">
-          <div className="text-xs text-gray-500">Khoảng cách còn lại</div>
-          <div className="text-lg font-bold text-boba-700">{fmtDistance(t.remainingMeters)}</div>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="stat-card">
+          <div className="text-[10px] text-gray-500">Còn lại</div>
+          <div className="text-base font-bold text-boba-700">{fmtDistance(t.remainingMeters)}</div>
         </div>
-        <div className="card text-center">
-          <div className="text-xs text-gray-500">Dự kiến tới nơi</div>
-          <div className="text-lg font-bold text-boba-700">{fmtDuration(t.etaSeconds)}</div>
+        <div className="stat-card">
+          <div className="text-[10px] text-gray-500">Dự kiến</div>
+          <div className="text-base font-bold text-boba-700">{fmtDuration(t.etaSeconds)}</div>
         </div>
-        <div className="card text-center">
-          <div className="text-xs text-gray-500">Hạn giao</div>
-          <div className="text-lg font-bold text-boba-700">
+        <div className="stat-card">
+          <div className="text-[10px] text-gray-500">Hạn giao</div>
+          <div className="text-base font-bold text-boba-700">
             {t.deadlineAt ? new Date(t.deadlineAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : "—"}
           </div>
         </div>

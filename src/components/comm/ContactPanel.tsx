@@ -15,15 +15,23 @@ export default function ContactPanel({
   const [openChat, setOpenChat] = useState(false);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <CallPanel orderId={orderId} peerName={peerName} />
       <button
-        onClick={() => setOpenChat((v) => !v)}
+        onClick={() => setOpenChat(true)}
         className="btn-ghost w-full text-sm"
       >
-        {openChat ? "Ẩn khung chat" : `💬 Nhắn tin với ${peerName}`}
+        💬 Nhắn tin với {peerName}
       </button>
-      {openChat && <ChatPanel orderId={orderId} peerName={peerName} />}
+
+      {/* Cửa sổ chat lớn: full màn hình trên điện thoại, hộp lớn trên màn rộng */}
+      {openChat && (
+        <div className="fixed inset-0 z-[2000] flex bg-black/40 sm:items-center sm:justify-center sm:p-4">
+          <div className="flex h-full w-full flex-col overflow-hidden bg-white shadow-xl sm:h-[85vh] sm:max-w-lg sm:rounded-2xl">
+            <ChatPanel orderId={orderId} peerName={peerName} onClose={() => setOpenChat(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -81,44 +81,38 @@ export default function ShipperDashboard() {
   );
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 p-4">
+    <main className="mx-auto max-w-6xl space-y-4 p-3">
       {me?.isBlacklisted && (
-        <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+        <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
           ⚠️ Tài khoản shiper của bạn đang bị hạn chế nhận đơn.
         </div>
       )}
 
       {/* Chỉ số shiper */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="card text-center">
-          <div className="text-3xl font-bold text-boba-700">
-            {sp?.reputationScore ?? 0}
-          </div>
-          <div className="text-xs text-gray-500">
-            Chỉ số uy tín • {reputationLabel(sp?.reputationScore ?? 0)}
+      <div className="grid grid-cols-4 gap-2">
+        <div className="stat-card">
+          <div className="text-xl font-bold text-boba-700">{sp?.reputationScore ?? 0}</div>
+          <div className="text-[10px] leading-tight text-gray-500">
+            Uy tín • {reputationLabel(sp?.reputationScore ?? 0)}
           </div>
         </div>
-        <div className="card text-center">
-          <div className="text-xl font-bold">
-            <StarsDisplay value={sp?.ratingAvg ?? 5} />
+        <div className="stat-card">
+          <div className="text-sm font-bold">
+            <StarsDisplay value={sp?.ratingAvg ?? 5} size="text-sm" />
           </div>
-          <div className="text-xs text-gray-500">
-            {(sp?.ratingAvg ?? 5).toFixed(1)} • {sp?.ratingCount ?? 0} đánh giá
-          </div>
-        </div>
-        <div className="card text-center">
-          <div className="text-3xl font-bold text-green-600">
-            {sp?.completedOrders ?? 0}
-          </div>
-          <div className="text-xs text-gray-500">
-            Đơn hoàn thành • huỷ {sp?.cancelledOrders ?? 0}
+          <div className="text-[10px] leading-tight text-gray-500">
+            {(sp?.ratingAvg ?? 5).toFixed(1)} • {sp?.ratingCount ?? 0} đ.giá
           </div>
         </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-boba-700">
-            {formatVnd(sp?.totalTips ?? 0)}
+        <div className="stat-card">
+          <div className="text-xl font-bold text-green-600">{sp?.completedOrders ?? 0}</div>
+          <div className="text-[10px] leading-tight text-gray-500">
+            Xong • huỷ {sp?.cancelledOrders ?? 0}
           </div>
-          <div className="text-xs text-gray-500">Tổng tiền tip</div>
+        </div>
+        <div className="stat-card">
+          <div className="text-sm font-bold text-boba-700">{formatVnd(sp?.totalTips ?? 0)}</div>
+          <div className="text-[10px] leading-tight text-gray-500">Tổng tip</div>
         </div>
       </div>
 

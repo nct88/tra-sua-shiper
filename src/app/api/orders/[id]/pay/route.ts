@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
 import { notifyAdmins } from "@/lib/notify";
-import { paymentLabel } from "@/lib/site";
+import { paymentLabel, isValidPaymentMethod } from "@/lib/site";
 
 // Xác nhận thanh toán (DEMO - mô phỏng cổng thanh toán, không phát sinh tiền thật)
 export async function POST(
@@ -14,6 +14,9 @@ export async function POST(
 
   const body = await req.json().catch(() => ({}));
   const method = (body as any)?.method as string | undefined;
+  if (method && !isValidPaymentMethod(method)) {
+    return fail("Phương thức thanh toán không hợp lệ");
+  }
 
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) return fail("Không tìm thấy đơn", 404);

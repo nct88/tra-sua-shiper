@@ -32,6 +32,13 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: "MOMO", label: "MoMo", icon: "🟣", desc: "Ví điện tử MoMo", color: "bg-pink-50 border-pink-200" },
 ];
 
+export const PAYMENT_METHOD_IDS = PAYMENT_METHODS.map((m) => m.id);
+
+// Kiểm tra một phương thức thanh toán có hợp lệ không (dùng ở các API).
+export function isValidPaymentMethod(id?: string | null): id is PaymentMethod["id"] {
+  return !!id && (PAYMENT_METHOD_IDS as string[]).includes(id);
+}
+
 export function paymentLabel(id: string): string {
   return PAYMENT_METHODS.find((m) => m.id === id)?.label || id;
 }

@@ -8,15 +8,10 @@ export async function POST(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
+  // requireUser đã chặn shiper trong danh sách đen (xem src/lib/api.ts)
   const auth = await requireUser(["SHIPPER"]);
   if (auth.error) return auth.error;
   const user = auth.user;
-
-  // Shiper bị danh sách đen không được nhận đơn
-  const banned = await prisma.blacklist.findFirst({
-    where: { userId: user.id, active: true },
-  });
-  if (banned) return fail("Tài khoản shiper đang bị hạn chế: " + banned.reason, 403);
 
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) return fail("Không tìm thấy đơn", 404);
@@ -29,8 +24,10 @@ export async function POST(
   const estSec = order.estimatedSeconds ?? 1800;
   const deadline = new Date(now.getTime() + (estSec + 600) * 1000);
 
-  const updated = await prisma.order.update({
-    where: { id: order.id },
+  // Nhận đơn NGUYÊN TỬ: chỉ cập nhật nếu đơn vẫn PENDING và chưa có shiper.
+  // Nếu count === 0 nghĩa là một shiper khác vừa nhận trước → từ chối.
+  const claim = await prisma.order.updateMany({
+    where: { id: order.id, status: "PENDING", shipperId: null },
     data: {
       status: "ACCEPTED",
       shipperId: user.id,
@@ -38,6 +35,10 @@ export async function POST(
       deadlineAt: deadline,
     },
   });
+  if (claim.count === 0) {
+    return fail("Đơn đã được shiper khác nhận", 409);
+  }
+  const updated = await prisma.order.findUnique({ where: { id: order.id } });
 
   // Đặt vị trí shiper khởi điểm tại quán + ping đầu tiên
   await prisma.shipperProfile.update({

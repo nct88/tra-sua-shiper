@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
 import { createNotification } from "@/lib/notify";
 import { haversine } from "@/lib/geo";
+import { ROUTES } from "@/lib/constants";
 
 // Admin tự động phân công shiper gần nhất (đang online, không bị chặn)
 export async function POST(
@@ -57,8 +58,10 @@ export async function POST(
   const estSec = order.estimatedSeconds ?? 1800;
   const deadline = new Date(now.getTime() + (estSec + 600) * 1000);
 
-  const updated = await prisma.order.update({
-    where: { id: order.id },
+  // Phân công NGUYÊN TỬ: chỉ gán nếu đơn vẫn PENDING & chưa có shiper, tránh
+  // việc shiper tự nhận xen vào giữa lúc admin đang phân công (lost update).
+  const claim = await prisma.order.updateMany({
+    where: { id: order.id, status: "PENDING", shipperId: null },
     data: {
       status: "ACCEPTED",
       shipperId: chosen.id,
@@ -66,6 +69,10 @@ export async function POST(
       deadlineAt: deadline,
     },
   });
+  if (claim.count === 0) {
+    return fail("Đơn đã được phân công", 409);
+  }
+  const updated = await prisma.order.findUnique({ where: { id: order.id } });
 
   await prisma.shipperProfile.update({
     where: { userId: chosen.id },
@@ -84,7 +91,7 @@ export async function POST(
     type: "ORDER",
     title: "Bạn được phân công đơn mới",
     message: `Đơn ${order.code} đã được tổng đài phân công cho bạn.`,
-    link: "/shipper",
+    link: ROUTES.SHIPPER,
   });
   await createNotification({
     userId: order.customerId,

@@ -31,14 +31,32 @@ export async function POST(
   const willRefund =
     order.paymentStatus === "PAID" && order.paymentMethod !== "CASH";
 
-  const updated = await prisma.order.update({
-    where: { id: order.id },
-    data: {
-      status: "CANCELLED",
-      cancelledAt: new Date(),
-      cancelReason: reason,
-      ...(willRefund ? { paymentStatus: "REFUNDED", refundedAt: new Date() } : {}),
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const u = await tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: "CANCELLED",
+        cancelledAt: new Date(),
+        cancelReason: reason,
+        ...(willRefund ? { paymentStatus: "REFUNDED", refundedAt: new Date() } : {}),
+      },
+    });
+
+    // Hoàn lại lượt voucher đã dùng cho đơn này: xoá redemption và giảm usedCount,
+    // để khách không bị "cháy" vĩnh viễn hạn mức khi đơn bị huỷ.
+    if (order.voucherCode) {
+      const removed = await tx.voucherRedemption.deleteMany({
+        where: { orderId: order.id },
+      });
+      if (removed.count > 0) {
+        await tx.voucher.updateMany({
+          where: { code: order.voucherCode, usedCount: { gte: removed.count } },
+          data: { usedCount: { decrement: removed.count } },
+        });
+      }
+    }
+
+    return u;
   });
 
   if (willRefund) {

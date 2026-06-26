@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
 import { createNotification } from "@/lib/notify";
 import { computeReputation } from "@/lib/business";
+import { ROUTES } from "@/lib/constants";
 
 // Khách đánh giá + tip cho shiper sau khi giao xong
 export async function POST(
@@ -73,7 +74,7 @@ export async function POST(
     type: "RATING",
     title: "Bạn nhận được đánh giá mới",
     message: `${stars}★${tip > 0 ? ` kèm tip ${tip.toLocaleString("vi-VN")}đ` : ""} cho đơn ${order.code}`,
-    link: `/shipper`,
+    link: ROUTES.SHIPPER,
   });
 
   return ok(rating);

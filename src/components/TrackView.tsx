@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiGet, apiSend, fmtDistance, fmtDuration } from "@/lib/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StarsDisplay } from "@/components/Stars";
-import { STATUS_FLOW, ORDER_STATUS_LABEL, type OrderStatus } from "@/lib/constants";
+import { STATUS_FLOW, ORDER_STATUS_LABEL, roleHome, type OrderStatus } from "@/lib/constants";
 import { reputationLabel } from "@/lib/business";
 import type { LngLat } from "@/lib/geo";
 import Map from "@/components/Map";
@@ -61,7 +61,7 @@ export default function TrackView({
     return () => clearInterval(poll);
   }, [load]);
 
-  const backHref = role === "ADMIN" ? "/admin" : role === "SHIPPER" ? "/shipper" : "/customer";
+  const backHref = roleHome(role);
 
   function sos() {
     if (!confirm("Gửi tín hiệu khẩn cấp SOS tới tổng đài?")) return;

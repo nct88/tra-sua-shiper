@@ -3,12 +3,19 @@
 export const ROLES = ["CUSTOMER", "SHIPPER", "ADMIN", "STAFF"] as const;
 export type Role = (typeof ROLES)[number];
 
+// Bản đồ vai trò → route chuẩn. Đây là NGUỒN CHÂN LÝ DUY NHẤT cho điều hướng
+// theo vai trò; mọi nơi (trang, AuthForm, thông báo) phải dùng qua đây để khi
+// đổi đường dẫn chỉ sửa một chỗ.
+export const ROUTES: Record<Role, string> = {
+  ADMIN: "/admin",
+  STAFF: "/pos",
+  SHIPPER: "/ship",
+  CUSTOMER: "/member",
+};
+
 // Trang chủ mặc định theo vai trò
 export function roleHome(role: string): string {
-  if (role === "ADMIN") return "/admin";
-  if (role === "SHIPPER") return "/shipper";
-  if (role === "STAFF") return "/pos";
-  return "/customer";
+  return ROUTES[role as Role] ?? ROUTES.CUSTOMER;
 }
 
 export const ORDER_STATUSES = [

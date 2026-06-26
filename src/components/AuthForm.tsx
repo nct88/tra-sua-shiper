@@ -3,21 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiSend } from "@/lib/client";
+import { roleHome } from "@/lib/constants";
 
 export default function AuthForm() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [role, setRole] = useState<"CUSTOMER" | "SHIPPER" | "STAFF">("CUSTOMER");
+  const [role, setRole] = useState<"CUSTOMER" | "SHIPPER">("CUSTOMER");
   const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  function dest(r: string) {
-    if (r === "ADMIN") return "/admin";
-    if (r === "SHIPPER") return "/shipper";
-    if (r === "STAFF") return "/pos";
-    return "/customer";
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,13 +23,13 @@ export default function AuthForm() {
           phone: form.phone,
           password: form.password,
         });
-        router.push(dest(data.role));
+        router.push(roleHome(data.role));
       } else {
         const data = await apiSend<{ role: string }>("/api/auth/register", "POST", {
           ...form,
           role,
         });
-        router.push(dest(data.role));
+        router.push(roleHome(data.role));
       }
       router.refresh();
     } catch (err: any) {
@@ -79,7 +73,7 @@ export default function AuthForm() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
             <div className="flex gap-2">
-              {(["CUSTOMER", "SHIPPER", "STAFF"] as const).map((r) => (
+              {(["CUSTOMER", "SHIPPER"] as const).map((r) => (
                 <button
                   type="button"
                   key={r}
@@ -90,7 +84,7 @@ export default function AuthForm() {
                       : "border-gray-200 text-gray-500"
                   }`}
                 >
-                  {r === "CUSTOMER" ? "🧋 Khách" : r === "SHIPPER" ? "🛵 Shiper" : "🏪 Nhân viên"}
+                  {r === "CUSTOMER" ? "🧋 Khách" : "🛵 Shiper"}
                 </button>
               ))}
             </div>

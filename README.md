@@ -1,0 +1,92 @@
+# 🧋 Boba Ship — Hệ thống giao trà sữa realtime
+
+Ứng dụng web giao trà sữa: shiper nhận đơn → bắt đầu hành trình, khách theo dõi
+**vị trí shiper & tuyến đường realtime trên bản đồ**, có thông báo, cảnh báo trễ
+giờ giao, đánh giá & tiền tip, chỉ số uy tín shiper, khách hàng thân thiết và
+danh sách đen.
+
+## Công nghệ
+
+- **Next.js 14** (App Router) + **TypeScript**
+- **Prisma** + **SQLite** (backend + database thật)
+- **Leaflet + OpenStreetMap** (bản đồ, miễn phí, không cần API key)
+- **OSRM** (định tuyến đường đi miễn phí, có fallback đường thẳng nếu mạng chặn)
+- Auth bằng JWT lưu trong cookie (`jose`), mật khẩu băm `bcrypt`
+- Tailwind CSS
+
+## Tính năng
+
+| Nhóm | Mô tả |
+|------|------|
+| 👤 Tài khoản | Đăng ký/đăng nhập 3 vai trò: Khách hàng, Shiper, Admin |
+| 🧋 Đặt đơn | Chọn món từ thực đơn, chọn điểm giao trên bản đồ, ghi chú |
+| 🛵 Hành trình | Shiper nhận đơn → lấy hàng → giao → hoàn tất; giả lập GPS di chuyển dọc tuyến |
+| 🗺️ Realtime | Bản đồ hiển thị vị trí shiper, tuyến đường dự kiến & vệt đã đi, cập nhật liên tục |
+| 🔔 Thông báo | Chuông thông báo cho mọi sự kiện (nhận đơn, cập nhật, đánh giá, bị chặn…) |
+| ⏰ Cảnh báo | Tính hạn giao, cảnh báo "sắp tới hạn" / "đã trễ" theo thời gian thực |
+| ⭐ Đánh giá & Tip | Khách chấm sao, nhận xét và tip cho shiper sau khi giao |
+| 📊 Chỉ số uy tín | Điểm uy tín shiper (0–100) từ sao, số đơn hoàn thành, tỉ lệ huỷ |
+| 🏆 Xếp hạng | Bảng xếp hạng shiper theo chỉ số uy tín |
+| 💎 Khách thân thiết | Tích điểm theo chi tiêu, hạng Bạc/Vàng/Kim Cương |
+| 🚫 Danh sách đen | Admin chặn khách/shiper; người bị chặn không đặt/nhận đơn được |
+
+## Chạy ở máy local
+
+```bash
+# 1. Cài đặt
+npm install
+
+# 2. Tạo file .env (xem .env.example)
+cp .env.example .env
+
+# 3. Khởi tạo database + tài khoản demo
+npm run db:push
+npm run db:seed
+
+# 4. Chạy
+npm run dev   # http://localhost:3000
+```
+
+### Tài khoản demo (mật khẩu `123456`)
+
+| Vai trò | Số điện thoại |
+|---------|---------------|
+| Admin | `0900000000` |
+| Khách hàng | `0911111111` |
+| Shiper | `0922222222` |
+
+### Cách demo luồng giao hàng
+
+1. Đăng nhập **Khách** → chọn món, bấm vào bản đồ chọn điểm giao → **Đặt đơn**.
+2. Đăng nhập **Shiper** (tab/trình duyệt khác) → **Nhận đơn** → bấm
+   **▶️ Bắt đầu di chuyển (GPS giả lập)** để xe chạy dọc tuyến, bấm các nút
+   tiến trạng thái: *Đã lấy hàng → Bắt đầu giao → Hoàn tất*.
+3. Quay lại **Khách** → mở **Theo dõi** để xem shiper di chuyển realtime, ETA,
+   cảnh báo giờ giao → sau khi giao xong thì **Đánh giá & Tip**.
+4. **Admin** xem toàn bộ đơn, quản lý khách/shiper, đưa vào/gỡ danh sách đen.
+
+## Ghi chú kỹ thuật
+
+- **Định tuyến OSRM**: dùng API công cộng `router.project-osrm.org`. Nếu mạng
+  chặn host này, hệ thống tự động fallback sang tuyến đường thẳng + ước lượng
+  thời gian (25 km/h) — app vẫn chạy bình thường, chỉ là đường không bám theo
+  đường thật.
+- **Realtime**: bản MVP dùng cơ chế *polling* (khách/shiper tự cập nhật mỗi vài
+  giây). Có thể nâng cấp lên WebSocket/Socket.IO sau này.
+- **GPS thật**: hiện shiper dùng GPS giả lập để demo. Để dùng GPS thật, thay phần
+  giả lập trong `src/components/shipper/ActiveDelivery.tsx` bằng
+  `navigator.geolocation.watchPosition` rồi POST tới `/api/orders/[id]/location`.
+
+### Sự cố tải Prisma engine khi mạng hạn chế
+
+Nếu `npm install` báo lỗi `ECONNRESET` khi tải Prisma engine, tải thủ công bằng
+`curl` (ổn định hơn) rồi trỏ biến môi trường:
+
+```bash
+npm install --ignore-scripts
+HASH=$(node -e "console.log(require('@prisma/engines-version').enginesVersion)")
+curl -fSL "https://binaries.prisma.sh/all_commits/$HASH/debian-openssl-3.0.x/schema-engine.gz" \
+  | gunzip > node_modules/@prisma/engines/schema-engine-debian-openssl-3.0.x
+chmod +x node_modules/@prisma/engines/schema-engine-debian-openssl-3.0.x
+npx prisma generate && npx prisma db push
+```

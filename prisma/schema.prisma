@@ -1,0 +1,167 @@
+// Prisma schema cho hệ thống giao trà sữa
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite không hỗ trợ enum -> dùng String. Giá trị hợp lệ định nghĩa trong src/lib/constants.ts
+// Role: CUSTOMER | SHIPPER | ADMIN
+// OrderStatus: PENDING | ACCEPTED | PICKED_UP | DELIVERING | DELIVERED | CANCELLED
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String   @unique
+  email        String?  @unique
+  passwordHash String
+  role         String   @default("CUSTOMER")
+  createdAt    DateTime @default(now())
+
+  customerProfile CustomerProfile?
+  shipperProfile  ShipperProfile?
+
+  ordersAsCustomer Order[]        @relation("CustomerOrders")
+  ordersAsShipper  Order[]        @relation("ShipperOrders")
+  ratingsGiven     Rating[]       @relation("RatingsByCustomer")
+  ratingsReceived  Rating[]       @relation("RatingsForShipper")
+  notifications    Notification[]
+  blacklistEntries Blacklist[]    @relation("BlacklistedUser")
+  blacklistsMade   Blacklist[]    @relation("BlacklistCreatedBy")
+}
+
+// Hồ sơ khách hàng: điểm thân thiết, tổng đơn, trạng thái VIP
+model CustomerProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loyaltyPoints Int      @default(0)
+  totalOrders   Int      @default(0)
+  totalSpent    Float    @default(0)
+  tier          String   @default("MOI") // MOI, BAC, VANG, KIM_CUONG
+  defaultAddress String?
+  defaultLat    Float?
+  defaultLng    Float?
+  updatedAt     DateTime @updatedAt
+}
+
+// Hồ sơ shiper: chỉ số đánh giá, vị trí hiện tại, trạng thái online
+model ShipperProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle         String   @default("Xe máy")
+  plateNumber     String?
+  isOnline        Boolean  @default(false)
+  currentLat      Float?
+  currentLng      Float?
+  ratingAvg       Float    @default(5)
+  ratingCount     Int      @default(0)
+  completedOrders Int      @default(0)
+  cancelledOrders Int      @default(0)
+  totalTips       Float    @default(0)
+  // Chỉ số uy tín tổng hợp 0-100
+  reputationScore Float    @default(80)
+  updatedAt       DateTime @updatedAt
+}
+
+model Order {
+  id        String @id @default(cuid())
+  code      String @unique
+  status    String @default("PENDING")
+
+  customerId String
+  customer   User   @relation("CustomerOrders", fields: [customerId], references: [id])
+  shipperId  String?
+  shipper    User?  @relation("ShipperOrders", fields: [shipperId], references: [id])
+
+  itemsJson String // JSON các món trà sữa
+  subtotal  Float
+  shippingFee Float @default(15000)
+  total     Float
+
+  // Điểm lấy hàng (quán)
+  pickupName String
+  pickupAddress String
+  pickupLat  Float
+  pickupLng  Float
+
+  // Điểm giao (khách)
+  dropoffAddress String
+  dropoffLat     Float
+  dropoffLng     Float
+  note           String?
+
+  // Tuyến đường & thời gian
+  routeJson        String? // GeoJSON coordinates [[lng,lat],...]
+  distanceMeters   Float?
+  estimatedSeconds Int? // thời gian dự kiến giao
+  deadlineAt       DateTime? // hạn giao -> dùng để cảnh báo trễ
+
+  tip       Float    @default(0)
+  createdAt DateTime @default(now())
+  acceptedAt  DateTime?
+  pickedUpAt  DateTime?
+  deliveringAt DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+  cancelReason String?
+
+  rating       Rating?
+  locationPings LocationPing[]
+}
+
+// Lịch sử vị trí của shiper theo từng đơn (vẽ tuyến thực tế / realtime)
+model LocationPing {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model Rating {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   User     @relation("RatingsByCustomer", fields: [customerId], references: [id])
+  shipperId  String
+  shipper    User     @relation("RatingsForShipper", fields: [shipperId], references: [id])
+  stars      Int // 1-5
+  comment    String?
+  tip        Float    @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // ORDER, WARNING, RATING, SYSTEM
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+// Danh sách đen: admin chặn khách / shiper
+model Blacklist {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("BlacklistedUser", fields: [userId], references: [id], onDelete: Cascade)
+  reason      String
+  createdById String
+  createdBy   User     @relation("BlacklistCreatedBy", fields: [createdById], references: [id])
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}

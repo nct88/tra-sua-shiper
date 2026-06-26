@@ -134,7 +134,7 @@ export default function AdminDashboard() {
 
   return (
     <main className="mx-auto max-w-6xl space-y-3 p-3">
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Stat label="Tổng đơn" value={String(stats.totalOrders)} />
         <Stat label="Đã giao" value={String(stats.delivered)} />
         <Stat label="Doanh thu" value={formatVnd(stats.revenue)} />
@@ -148,12 +148,12 @@ export default function AdminDashboard() {
         🏪 Mở màn hình POS bán hàng
       </Link>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto">
         {TABS.map((tb) => (
           <button
             key={tb}
             onClick={() => setTab(tb)}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-medium ${
               tab === tb ? "bg-boba-600 text-white" : "bg-white text-boba-700 border border-boba-200"
             }`}
           >
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
       {tab === "orders" && (
         <div className="card space-y-2">
           {orders.map((o) => (
-            <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-boba-100 p-3">
+            <div key={o.id} className="flex flex-col gap-2 rounded-lg border border-boba-100 p-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <span className="font-semibold text-boba-800">{o.code}</span>{" "}
                 <StatusBadge status={o.status} />
@@ -186,18 +186,18 @@ export default function AdminDashboard() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-1.5 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
                 <span className="text-sm font-medium text-boba-700">
                   {formatVnd(o.total)}
                   {o.tip > 0 && <span className="text-green-600"> +tip {formatVnd(o.tip)}</span>}
                 </span>
                 {o.status === "PENDING" && !o.shipper && (
-                  <button onClick={() => autoAssign(o.id)} className="btn-primary text-sm whitespace-nowrap">
+                  <button onClick={() => autoAssign(o.id)} className="btn-primary w-full text-sm whitespace-nowrap sm:w-auto">
                     Tự động phân công
                   </button>
                 )}
-                <button onClick={() => setChatOrderId(o.id)} className="btn-ghost text-sm">Chat</button>
-                <Link href={`/track/${o.id}`} className="btn-ghost text-sm">Xem</Link>
+                <button onClick={() => setChatOrderId(o.id)} className="btn-ghost w-full text-sm sm:w-auto">Chat</button>
+                <Link href={`/track/${o.id}`} className="btn-ghost w-full text-center text-sm sm:w-auto">Xem</Link>
               </div>
             </div>
           ))}
@@ -208,7 +208,7 @@ export default function AdminDashboard() {
       {tab === "customers" && (
         <div className="card space-y-2">
           {customers.map((u) => (
-            <div key={u.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-boba-100 p-3">
+            <div key={u.id} className="flex flex-col gap-2 rounded-lg border border-boba-100 p-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="font-semibold text-boba-800">
                   {u.name} <span className="text-xs font-normal text-gray-400">{u.phone}</span>
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
               </div>
               <button
                 onClick={() => toggleBan(u)}
-                className={`rounded-lg px-3 py-1.5 text-sm ${
+                className={`w-full rounded-lg px-3 py-1.5 text-sm sm:w-auto ${
                   u.isBlacklisted
                     ? "bg-green-600 text-white"
                     : "border border-red-300 text-red-600"
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
       {tab === "shippers" && (
         <div className="card space-y-2">
           {shippers.map((u) => (
-            <div key={u.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-boba-100 p-3">
+            <div key={u.id} className="flex flex-col gap-2 rounded-lg border border-boba-100 p-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="font-semibold text-boba-800">
                   {u.name} <span className="text-xs font-normal text-gray-400">{u.phone}</span>
@@ -259,7 +259,7 @@ export default function AdminDashboard() {
               </div>
               <button
                 onClick={() => toggleBan(u)}
-                className={`rounded-lg px-3 py-1.5 text-sm ${
+                className={`w-full rounded-lg px-3 py-1.5 text-sm sm:w-auto ${
                   u.isBlacklisted ? "bg-green-600 text-white" : "border border-red-300 text-red-600"
                 }`}
               >
@@ -315,10 +315,10 @@ function AdminChatModal({ orderId, onClose }: { orderId: string; onClose: () => 
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl bg-white p-4">
+      <div className="flex max-h-[88vh] w-[92vw] max-w-md flex-col overflow-y-auto rounded-2xl bg-white p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="font-bold text-boba-800">Lịch sử chat đơn hàng</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600">✕</button>
         </div>
         <div className="flex-1 space-y-2 overflow-y-auto">
           {msgs.length === 0 && <p className="text-center text-sm text-gray-400">Chưa có tin nhắn.</p>}

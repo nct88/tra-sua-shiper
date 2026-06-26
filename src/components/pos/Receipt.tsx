@@ -27,7 +27,7 @@ export default function Receipt({ order }: { order: ReceiptOrder }) {
       : order.code;
 
   return (
-    <div id="pos-receipt" className="mx-auto w-[300px] bg-white p-3 text-[12px] text-black">
+    <div id="pos-receipt" className="mx-auto w-full max-w-[300px] bg-white p-3 text-[12px] text-black">
       <div className="text-center">
         <div className="text-base font-bold">🧋 {SITE.name}</div>
         <div>{STORE.address}</div>

@@ -114,7 +114,7 @@ export default function POSTerminal() {
   return (
     <main className="mx-auto max-w-6xl p-3">
       {/* Thanh ca làm việc */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-boba-200 bg-white p-2.5">
+      <div className="mb-3 flex flex-col gap-2 rounded-xl border border-boba-200 bg-white p-2.5 md:flex-row md:items-center md:justify-between">
         {shift ? (
           <>
             <div className="text-sm">
@@ -155,7 +155,7 @@ export default function POSTerminal() {
           <button
             key={m}
             onClick={() => setMode(m)}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${
+            className={`flex-1 rounded-lg py-3 text-base font-semibold ${
               mode === m ? "bg-boba-600 text-white" : "border border-boba-200 bg-white text-boba-700"
             }`}
           >
@@ -166,12 +166,12 @@ export default function POSTerminal() {
 
       <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
         {/* Lưới món */}
-        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3">
           {DRINKS.map((m) => (
             <button
               key={m.id}
               onClick={() => setCustomizing(m.id)}
-              className="flex flex-col items-start rounded-xl border border-boba-200 bg-white p-2.5 text-left hover:border-boba-400 hover:shadow"
+              className="flex min-h-[110px] flex-col items-start rounded-xl border border-boba-200 bg-white p-2.5 text-left hover:border-boba-400 hover:shadow"
             >
               <span className="text-2xl">{m.emoji}</span>
               <span className="mt-1 text-sm font-medium leading-tight text-boba-900">{m.name}</span>
@@ -189,9 +189,9 @@ export default function POSTerminal() {
               <div key={l.key} className="flex items-center justify-between gap-2 text-sm">
                 <span className="flex-1 leading-tight">{lineLabel(l.drinkId, l.size, l.toppings)}</span>
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty - 1))} className="h-6 w-6 rounded-full border text-boba-700">−</button>
+                  <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty - 1))} className="flex h-9 w-9 items-center justify-center rounded-full border text-boba-700">−</button>
                   <span className="w-5 text-center">{l.qty}</span>
-                  <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty + 1))} className="h-6 w-6 rounded-full border text-boba-700">+</button>
+                  <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty + 1))} className="flex h-9 w-9 items-center justify-center rounded-full border text-boba-700">+</button>
                 </div>
                 <span className="w-20 text-right font-medium text-boba-700">{formatVnd(lineUnitPrice(l.drinkId, l.size, l.toppings) * l.qty)}</span>
               </div>
@@ -204,7 +204,7 @@ export default function POSTerminal() {
 
             {mode === "DELIVERY" && (
               <>
-                <div className="h-40 w-full">
+                <div className="h-40 w-full sm:h-48">
                   <Map
                     markers={[
                       { lat: STORE.lat, lng: STORE.lng, type: "store", label: STORE.name },
@@ -231,7 +231,7 @@ export default function POSTerminal() {
                 <button
                   key={p.id}
                   onClick={() => setPay(p.id)}
-                  className={`rounded-lg border px-2 py-1 text-xs ${pay === p.id ? "border-boba-500 bg-boba-50 font-semibold" : "border-gray-200"}`}
+                  className={`rounded-lg border px-3 py-2 text-xs ${pay === p.id ? "border-boba-500 bg-boba-50 font-semibold" : "border-gray-200"}`}
                 >
                   {p.icon} {p.label}
                 </button>
@@ -271,7 +271,7 @@ export default function POSTerminal() {
       {/* Kết quả + hoá đơn */}
       {result && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-sm space-y-3 overflow-y-auto rounded-2xl bg-white p-4">
+          <div className="max-h-[90vh] w-[92vw] max-w-sm space-y-3 overflow-y-auto rounded-2xl bg-white p-4">
             <h3 className="text-center text-lg font-bold text-boba-800">Đã tạo đơn {result.code}</h3>
             <div className="rounded-xl border border-boba-100 p-2">
               <Receipt order={result} />
@@ -304,7 +304,7 @@ export default function POSTerminal() {
       {/* Báo cáo chốt ca (Z-report) */}
       {zReport && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm space-y-2 rounded-2xl bg-white p-5">
+          <div className="max-h-[90vh] w-[92vw] max-w-sm space-y-2 overflow-y-auto rounded-2xl bg-white p-5">
             <h3 className="text-center text-lg font-bold text-boba-800">📋 Báo cáo chốt ca</h3>
             <Row label="Số đơn" value={String(zReport.report.orderCount)} />
             <Row label="Tổng doanh thu" value={formatVnd(zReport.report.total)} bold />

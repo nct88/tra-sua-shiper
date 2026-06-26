@@ -27,7 +27,7 @@ type Stats = {
 
 function Money({ label, value, hint, accent }: { label: string; value: string; hint?: string; accent?: string }) {
   return (
-    <div className="card">
+    <div className="card p-3">
       <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-xl font-bold ${accent || "text-boba-700"}`}>{value}</div>
       {hint && <div className="text-[11px] text-gray-400">{hint}</div>}
@@ -49,7 +49,7 @@ export default function FinanceDashboard() {
   return (
     <div className="space-y-4">
       {/* Tổng quan */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Money label="GMV (khách trả)" value={formatVnd(a.gmv)} hint={`${a.deliveredCount} đơn đã giao`} />
         <Money label="Lợi nhuận công ty" value={formatVnd(a.companyProfit)} accent="text-green-600" hint="Hoa hồng − khuyến mãi" />
         <Money label="Trả cho quán" value={formatVnd(a.shopPayout)} hint={`Doanh thu món ${formatVnd(a.foodRevenue)}`} />
@@ -63,10 +63,10 @@ export default function FinanceDashboard() {
       {/* Biểu đồ lợi nhuận 7 ngày */}
       <div className="card">
         <h3 className="mb-3 font-bold text-boba-800">Lợi nhuận công ty 7 ngày gần nhất</h3>
-        <div className="flex h-44 items-end gap-2">
+        <div className="flex h-32 items-end gap-2 sm:h-40 md:h-44">
           {s.days.map((d) => (
             <div key={d.date} className="flex flex-1 flex-col items-center justify-end gap-1">
-              <div className="text-[10px] font-medium text-boba-700">
+              <div className="text-[11px] font-medium text-boba-700 md:text-xs">
                 {d.profit > 0 ? formatVnd(d.profit).replace("đ", "") : ""}
               </div>
               <div
@@ -74,7 +74,7 @@ export default function FinanceDashboard() {
                 style={{ height: `${(d.profit / maxProfit) * 100}%`, minHeight: d.profit > 0 ? 4 : 0 }}
                 title={`${d.orders} đơn`}
               />
-              <div className="text-[10px] text-gray-500">{d.date}</div>
+              <div className="text-[11px] text-gray-500 md:text-xs">{d.date}</div>
             </div>
           ))}
         </div>
@@ -86,8 +86,8 @@ export default function FinanceDashboard() {
           <h3 className="mb-2 font-bold text-boba-800">Top shiper theo thu nhập</h3>
           {s.topShippers.length === 0 && <p className="text-sm text-gray-400">Chưa có dữ liệu.</p>}
           {s.topShippers.map((sh, i) => (
-            <div key={i} className="flex items-center justify-between border-b py-1.5 text-sm last:border-0">
-              <span>{i + 1}. {sh.name} <span className="text-xs text-gray-400">({sh.completed} đơn)</span></span>
+            <div key={i} className="flex items-center justify-between gap-2 border-b py-2.5 text-sm last:border-0">
+              <span className="min-w-0 truncate">{i + 1}. {sh.name} <span className="text-xs text-gray-400">({sh.completed} đơn)</span></span>
               <b className="text-boba-700">{formatVnd(sh.earning)}</b>
             </div>
           ))}
@@ -98,8 +98,8 @@ export default function FinanceDashboard() {
           <h3 className="mb-2 font-bold text-boba-800">Cơ cấu thanh toán (đơn đã giao)</h3>
           {s.paymentBreakdown.length === 0 && <p className="text-sm text-gray-400">Chưa có dữ liệu.</p>}
           {s.paymentBreakdown.map((p) => (
-            <div key={p.method} className="flex items-center justify-between border-b py-1.5 text-sm last:border-0">
-              <span>{paymentLabel(p.method)}</span>
+            <div key={p.method} className="flex items-center justify-between gap-2 border-b py-2.5 text-sm last:border-0">
+              <span className="min-w-0 truncate">{paymentLabel(p.method)}</span>
               <b className="text-boba-700">{p.count} đơn</b>
             </div>
           ))}

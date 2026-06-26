@@ -41,8 +41,19 @@ export default function Header({
 
   useEffect(() => {
     load();
-    const t = setInterval(load, 8000); // poll thông báo
-    return () => clearInterval(t);
+    // Realtime qua SSE; polling chậm làm phương án dự phòng
+    const t = setInterval(load, 30000);
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource("/api/stream");
+      es.onmessage = () => load();
+    } catch {
+      /* trình duyệt không hỗ trợ */
+    }
+    return () => {
+      clearInterval(t);
+      es?.close();
+    };
   }, [load]);
 
   async function toggle() {

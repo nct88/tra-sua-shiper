@@ -39,6 +39,12 @@ danh sách đen.
 | 📍 GPS thật | Shiper bật định vị thiết bị thật (watchPosition) thay cho giả lập |
 | 🆘 SOS an toàn | Khách/shiper báo khẩn cấp kèm vị trí tới tổng đài & bên còn lại |
 | 🎯 Tự động phân công | Admin gán shiper gần nhất (đang online, không bị chặn) cho đơn chờ |
+| 💰 Mô hình tài chính | Phí giao theo khoảng cách, chiết khấu quán/shiper, thu nhập shiper, lợi nhuận công ty |
+| 📊 Dashboard tài chính | GMV, lợi nhuận, biểu đồ 7 ngày, top shiper, cơ cấu thanh toán |
+| 🔗 Link chia sẻ công khai | Theo dõi đơn không cần đăng nhập (`/theo-doi/[token]`), ẩn thông tin nhạy cảm |
+| ↩️ Hoàn tiền | Tự động hoàn tiền đơn thanh toán online khi huỷ |
+| 🟢 Realtime (SSE) | Thông báo đẩy tức thì qua Server-Sent Events (fallback polling) |
+| 🗂️ Admin xem chat | Quản trị xem lịch sử chat của đơn để xử lý khiếu nại |
 
 ## Chạy ở máy local
 
@@ -86,6 +92,18 @@ npm run dev   # http://localhost:3000
 - **GPS thật**: hiện shiper dùng GPS giả lập để demo. Để dùng GPS thật, thay phần
   giả lập trong `src/components/shipper/ActiveDelivery.tsx` bằng
   `navigator.geolocation.watchPosition` rồi POST tới `/api/orders/[id]/location`.
+
+### Mô hình tài chính (dòng tiền 1 đơn)
+
+Cấu hình tại `src/lib/finance.ts`:
+
+- **Phí giao (khách trả)** = 12.000đ cho 2km đầu + 5.000đ/km vượt (tối thiểu 12.000đ, tối đa 60.000đ, làm tròn 500đ).
+- **Quán trà sữa nhận** = tiền món − chiết khấu **15%** (công ty thu).
+- **Shiper nhận** = phí giao − chiết khấu **20%** + **100% tiền tip**.
+- **Lợi nhuận công ty** = hoa hồng quán (15% tiền món) + hoa hồng phí giao (20% phí giao) − chi phí khuyến mãi.
+- **Khách trả** = tiền món + phí giao − giảm giá (+ tip nếu có).
+
+Xem trực quan ở tab **💰 Tài chính** trong trang Quản trị (GMV, lợi nhuận, biểu đồ 7 ngày, top shiper, cơ cấu thanh toán).
 
 ### Bảo mật số điện thoại & liên lạc trong app
 

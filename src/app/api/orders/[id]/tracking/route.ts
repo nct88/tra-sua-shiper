@@ -82,6 +82,7 @@ export async function GET(
     id: order.id,
     code: order.code,
     status: order.status,
+    shareToken: order.shareToken,
     pickup: { lat: order.pickupLat, lng: order.pickupLng, name: order.pickupName, address: order.pickupAddress },
     dropoff: { lat: order.dropoffLat, lng: order.dropoffLng, address: order.dropoffAddress },
     route,

@@ -355,7 +355,9 @@ export default function CustomerDashboard() {
                   </div>
                   <div className="mt-1 text-xs">
                     {paymentIcon(o.paymentMethod)} {paymentLabel(o.paymentMethod)} ·{" "}
-                    {o.paymentStatus === "PAID" ? (
+                    {o.paymentStatus === "REFUNDED" ? (
+                      <span className="font-medium text-blue-600">Đã hoàn tiền</span>
+                    ) : o.paymentStatus === "PAID" ? (
                       <span className="font-medium text-green-600">Đã thanh toán</span>
                     ) : o.paymentMethod === "CASH" ? (
                       <span className="text-gray-500">Trả khi nhận hàng</span>

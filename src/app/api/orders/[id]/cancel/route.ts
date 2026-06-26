@@ -27,10 +27,29 @@ export async function POST(
     return fail("Đơn đã kết thúc, không thể huỷ", 400);
   }
 
+  // Hoàn tiền nếu đã thanh toán online
+  const willRefund =
+    order.paymentStatus === "PAID" && order.paymentMethod !== "CASH";
+
   const updated = await prisma.order.update({
     where: { id: order.id },
-    data: { status: "CANCELLED", cancelledAt: new Date(), cancelReason: reason },
+    data: {
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+      cancelReason: reason,
+      ...(willRefund ? { paymentStatus: "REFUNDED", refundedAt: new Date() } : {}),
+    },
   });
+
+  if (willRefund) {
+    await createNotification({
+      userId: order.customerId,
+      type: "SYSTEM",
+      title: "Hoàn tiền đơn hàng",
+      message: `Đơn ${order.code} đã huỷ. Số tiền ${order.total.toLocaleString("vi-VN")}đ sẽ được hoàn về ${order.paymentMethod}.`,
+      link: `/track/${order.id}`,
+    });
+  }
 
   // Shiper huỷ -> trừ uy tín
   if (isOwnerShipper && order.shipperId) {

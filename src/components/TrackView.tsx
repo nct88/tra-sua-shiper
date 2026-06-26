@@ -14,6 +14,7 @@ import ContactPanel from "@/components/comm/ContactPanel";
 type Tracking = {
   code: string;
   status: string;
+  shareToken: string | null;
   peerId: string | null;
   pickup: { lat: number; lng: number; name: string; address: string };
   dropoff: { lat: number; lng: number; address: string };
@@ -99,6 +100,20 @@ export default function TrackView({
       <div className="flex items-center justify-between">
         <Link href={backHref} className="text-sm text-boba-600">← Quay lại</Link>
         <div className="flex items-center gap-2">
+          {t.shareToken && status !== "CANCELLED" && (
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/theo-doi/${t.shareToken}`;
+                navigator.clipboard?.writeText(url).then(
+                  () => alert("Đã sao chép link chia sẻ:\n" + url),
+                  () => prompt("Link chia sẻ:", url)
+                );
+              }}
+              className="btn-ghost text-xs"
+            >
+              🔗 Chia sẻ
+            </button>
+          )}
           <span className="font-bold text-boba-800">{t.code}</span>
           <StatusBadge status={t.status} />
         </div>

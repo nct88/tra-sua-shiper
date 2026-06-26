@@ -5,6 +5,7 @@ import { apiGet, apiSend, formatVnd } from "@/lib/client";
 import { StarsDisplay } from "@/components/Stars";
 import { StatusBadge } from "@/components/StatusBadge";
 import { reputationLabel } from "@/lib/business";
+import { computeFinance } from "@/lib/finance";
 import ActiveDelivery from "./ActiveDelivery";
 
 type Me = {
@@ -25,6 +26,10 @@ type Order = {
   code: string;
   status: string;
   total: number;
+  subtotal: number;
+  shippingFee: number;
+  discount: number;
+  tip: number;
   itemsJson: string;
   dropoffAddress: string;
   distanceMeters?: number | null;
@@ -159,6 +164,9 @@ export default function ShipperDashboard() {
                       ? ` • ~${(o.distanceMeters / 1000).toFixed(1)}km`
                       : ""}
                   </div>
+                  <div className="text-xs font-medium text-green-600">
+                    Bạn nhận ~{formatVnd(computeFinance({ subtotal: 0, shippingFee: o.shippingFee, discount: 0, tip: 0 }).shipperEarning)} (chưa gồm tip)
+                  </div>
                 </div>
                 <button
                   onClick={() => accept(o.id)}
@@ -190,8 +198,15 @@ export default function ShipperDashboard() {
                 <StatusBadge status={o.status} />
                 <div className="text-xs text-gray-400">{o.dropoffAddress}</div>
               </div>
-              <div className="text-sm font-medium text-boba-700">
-                {formatVnd(o.total)}
+              <div className="text-right">
+                {o.status === "DELIVERED" ? (
+                  <div className="text-sm font-bold text-green-600">
+                    +{formatVnd(computeFinance(o).shipperEarning)}
+                    {o.tip > 0 && <div className="text-[10px] font-normal text-gray-400">gồm tip {formatVnd(o.tip)}</div>}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-400">{formatVnd(o.total)}</div>
+                )}
               </div>
             </div>
           ))}

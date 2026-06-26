@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { publishToUser } from "./events";
 
 export async function createNotification(params: {
   userId: string;
@@ -7,7 +8,7 @@ export async function createNotification(params: {
   message: string;
   link?: string;
 }) {
-  return prisma.notification.create({
+  const n = await prisma.notification.create({
     data: {
       userId: params.userId,
       type: params.type,
@@ -16,6 +17,13 @@ export async function createNotification(params: {
       link: params.link,
     },
   });
+  // Đẩy realtime tới người nhận
+  publishToUser(params.userId, {
+    type: "notification",
+    title: params.title,
+    message: params.message,
+  });
+  return n;
 }
 
 // Gửi thông báo cho tất cả admin
@@ -39,4 +47,7 @@ export async function notifyAdmins(params: {
       link: params.link,
     })),
   });
+  for (const a of admins) {
+    publishToUser(a.id, { type: "notification", title: params.title, message: params.message });
+  }
 }

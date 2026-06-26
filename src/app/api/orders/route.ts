@@ -2,11 +2,17 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
 import { genOrderCode } from "@/lib/business";
-import { menuItem, STORE, DEFAULT_SHIPPING_FEE } from "@/lib/menu";
+import { menuItem, STORE } from "@/lib/menu";
 import { fetchRoute } from "@/lib/geo";
 import { notifyAdmins } from "@/lib/notify";
 import { maskPhone } from "@/lib/privacy";
 import { evaluateVoucher } from "@/lib/voucher";
+import { computeShippingFee } from "@/lib/finance";
+import { randomBytes } from "crypto";
+
+function randomToken() {
+  return randomBytes(16).toString("hex");
+}
 
 // GET /api/orders?scope=available|mine
 export async function GET(req: NextRequest) {
@@ -104,7 +110,13 @@ export async function POST(req: NextRequest) {
 
   if (detailed.length === 0) return fail("Món trong giỏ không hợp lệ");
 
-  const shippingFee = DEFAULT_SHIPPING_FEE;
+  // Tính tuyến đường từ quán -> điểm giao (để tính phí giao theo khoảng cách)
+  const route = await fetchRoute(
+    [STORE.lng, STORE.lat],
+    [dropoffLng, dropoffLat]
+  );
+
+  const shippingFee = computeShippingFee(route.distanceMeters);
 
   // Áp dụng mã giảm giá (nếu có) - kiểm tra lại ở server
   let discount = 0;
@@ -118,12 +130,6 @@ export async function POST(req: NextRequest) {
   }
 
   const total = Math.max(0, subtotal + shippingFee - discount);
-
-  // Tính tuyến đường từ quán -> điểm giao
-  const route = await fetchRoute(
-    [STORE.lng, STORE.lat],
-    [dropoffLng, dropoffLat]
-  );
 
   const order = await prisma.order.create({
     data: {
@@ -148,6 +154,7 @@ export async function POST(req: NextRequest) {
       estimatedSeconds: route.durationSeconds,
       paymentMethod: payMethod,
       paymentStatus: "UNPAID",
+      shareToken: randomToken(),
     },
   });
 

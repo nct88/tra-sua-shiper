@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { StarsDisplay } from "@/components/Stars";
 import { TIER_LABEL, reputationLabel } from "@/lib/business";
 import { paymentLabel, paymentIcon } from "@/lib/site";
+import FinanceDashboard from "./FinanceDashboard";
 
 type Order = {
   id: string;
@@ -49,8 +50,9 @@ type Voucher = {
   expiresAt: string | null;
 };
 
-const TABS = ["orders", "customers", "shippers", "vouchers", "blacklist"] as const;
+const TABS = ["finance", "orders", "customers", "shippers", "vouchers", "blacklist"] as const;
 const TAB_LABEL: Record<string, string> = {
+  finance: "💰 Tài chính",
   orders: "📦 Đơn hàng",
   customers: "🧋 Khách hàng",
   shippers: "🛵 Shiper",
@@ -59,11 +61,12 @@ const TAB_LABEL: Record<string, string> = {
 };
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("orders");
+  const [tab, setTab] = useState<(typeof TABS)[number]>("finance");
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<AdminUser[]>([]);
   const [shippers, setShippers] = useState<AdminUser[]>([]);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -150,6 +153,8 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {tab === "finance" && <FinanceDashboard />}
+
       {tab === "orders" && (
         <div className="card space-y-2">
           {orders.map((o) => (
@@ -180,6 +185,7 @@ export default function AdminDashboard() {
                     Tự động phân công
                   </button>
                 )}
+                <button onClick={() => setChatOrderId(o.id)} className="btn-ghost text-sm">Chat</button>
                 <Link href={`/track/${o.id}`} className="btn-ghost text-sm">Xem</Link>
               </div>
             </div>
@@ -278,7 +284,44 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+
+      {chatOrderId && (
+        <AdminChatModal orderId={chatOrderId} onClose={() => setChatOrderId(null)} />
+      )}
     </main>
+  );
+}
+
+function AdminChatModal({ orderId, onClose }: { orderId: string; onClose: () => void }) {
+  const [msgs, setMsgs] = useState<{ id: string; body: string; senderName: string; createdAt: string }[]>([]);
+  useEffect(() => {
+    apiGet<{ id: string; body: string; senderName: string; createdAt: string }[]>(
+      `/api/orders/${orderId}/messages`
+    )
+      .then(setMsgs)
+      .catch(() => {});
+  }, [orderId]);
+
+  return (
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
+      <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl bg-white p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="font-bold text-boba-800">Lịch sử chat đơn hàng</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="flex-1 space-y-2 overflow-y-auto">
+          {msgs.length === 0 && <p className="text-center text-sm text-gray-400">Chưa có tin nhắn.</p>}
+          {msgs.map((m) => (
+            <div key={m.id} className="rounded-lg border border-boba-100 p-2 text-sm">
+              <div className="text-xs font-semibold text-boba-700">{m.senderName}</div>
+              <div className="text-gray-700">{m.body}</div>
+              <div className="text-[10px] text-gray-400">{new Date(m.createdAt).toLocaleString("vi-VN")}</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-center text-[11px] text-gray-400">Chế độ xem dành cho quản trị</p>
+      </div>
+    </div>
   );
 }
 

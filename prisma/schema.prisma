@@ -108,8 +108,12 @@ model Order {
 
   // Thanh toán: CASH | BANK | CARD | ZALOPAY | MOMO
   paymentMethod String  @default("CASH")
-  paymentStatus String  @default("UNPAID") // UNPAID | PAID
+  paymentStatus String  @default("UNPAID") // UNPAID | PAID | REFUNDED
   paidAt        DateTime?
+  refundedAt    DateTime?
+
+  // Link chia sẻ theo dõi công khai (không cần đăng nhập)
+  shareToken String? @unique
 
   createdAt DateTime @default(now())
   acceptedAt  DateTime?

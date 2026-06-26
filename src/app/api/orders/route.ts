@@ -5,6 +5,7 @@ import { genOrderCode } from "@/lib/business";
 import { menuItem, STORE, DEFAULT_SHIPPING_FEE } from "@/lib/menu";
 import { fetchRoute } from "@/lib/geo";
 import { notifyAdmins } from "@/lib/notify";
+import { maskPhone } from "@/lib/privacy";
 
 // GET /api/orders?scope=available|mine
 export async function GET(req: NextRequest) {
@@ -35,6 +36,14 @@ export async function GET(req: NextRequest) {
     },
     take: 100,
   });
+
+  // Che số điện thoại hai bên (admin vẫn xem được)
+  if (user.role !== "ADMIN") {
+    for (const o of orders) {
+      if (o.customer) o.customer.phone = maskPhone(o.customer.phone) as any;
+      if (o.shipper) o.shipper.phone = maskPhone(o.shipper.phone) as any;
+    }
+  }
 
   return ok(orders);
 }

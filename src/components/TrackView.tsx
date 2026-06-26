@@ -9,10 +9,12 @@ import { STATUS_FLOW, ORDER_STATUS_LABEL, type OrderStatus } from "@/lib/constan
 import { reputationLabel } from "@/lib/business";
 import type { LngLat } from "@/lib/geo";
 import Map from "@/components/Map";
+import ContactPanel from "@/components/comm/ContactPanel";
 
 type Tracking = {
   code: string;
   status: string;
+  peerId: string | null;
   pickup: { lat: number; lng: number; name: string; address: string };
   dropoff: { lat: number; lng: number; address: string };
   route: LngLat[];
@@ -173,6 +175,11 @@ export default function TrackView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Liên lạc trong app (ẩn số điện thoại) */}
+      {t.peerId && t.shipper && status !== "CANCELLED" && (
+        <ContactPanel orderId={orderId} peerName={t.shipper.name} />
       )}
     </main>
   );

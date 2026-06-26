@@ -29,6 +29,9 @@ danh sách đen.
 | 🏆 Xếp hạng | Bảng xếp hạng shiper theo chỉ số uy tín |
 | 💎 Khách thân thiết | Tích điểm theo chi tiêu, hạng Bạc/Vàng/Kim Cương |
 | 🚫 Danh sách đen | Admin chặn khách/shiper; người bị chặn không đặt/nhận đơn được |
+| 💬 Nhắn tin trong app | Chat khách ↔ shiper theo đơn, có câu trả lời nhanh, thông báo tin mới |
+| 📞 Gọi điện trong app | Gọi thoại WebRTC ngay trong app, không cần lộ số điện thoại |
+| 🔒 Ẩn số điện thoại | Hai bên chỉ thấy số đã che (vd `092••••22`); chỉ admin xem số đầy đủ |
 
 ## Chạy ở máy local
 
@@ -76,6 +79,19 @@ npm run dev   # http://localhost:3000
 - **GPS thật**: hiện shiper dùng GPS giả lập để demo. Để dùng GPS thật, thay phần
   giả lập trong `src/components/shipper/ActiveDelivery.tsx` bằng
   `navigator.geolocation.watchPosition` rồi POST tới `/api/orders/[id]/location`.
+
+### Bảo mật số điện thoại & liên lạc trong app
+
+- Khách và shiper **không nhìn thấy số điện thoại thật** của nhau. Mọi liên lạc
+  đi qua **chat** và **gọi thoại trong app**. Admin vẫn xem số đầy đủ để hỗ trợ.
+- **Gọi điện** dùng **WebRTC** (peer-to-peer), tín hiệu trao đổi qua kênh
+  signaling polling (`/api/orders/[id]/call`). Lưu ý:
+  - Trình duyệt chỉ cho phép truy cập micro trên `localhost` hoặc **HTTPS** →
+    khi deploy thật cần chạy HTTPS.
+  - Trên cùng máy/cùng mạng LAN thì kết nối trực tiếp được. Để gọi xuyên
+    Internet (NAT khác nhau) cần thêm **TURN server** trong `ICE_SERVERS` tại
+    `src/components/comm/CallPanel.tsx` (hiện chỉ cấu hình STUN của Google).
+- **Nhắn tin** lưu trong bảng `Message`, cập nhật bằng polling mỗi 3 giây.
 
 ### Sự cố tải Prisma engine khi mạng hạn chế
 

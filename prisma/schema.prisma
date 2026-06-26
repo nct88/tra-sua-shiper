@@ -31,6 +31,7 @@ model User {
   notifications    Notification[]
   blacklistEntries Blacklist[]    @relation("BlacklistedUser")
   blacklistsMade   Blacklist[]    @relation("BlacklistCreatedBy")
+  messagesSent     Message[]      @relation("MessageSender")
 }
 
 // Hồ sơ khách hàng: điểm thân thiết, tổng đơn, trạng thái VIP
@@ -112,6 +113,7 @@ model Order {
 
   rating       Rating?
   locationPings LocationPing[]
+  messages      Message[]
 }
 
 // Lịch sử vị trí của shiper theo từng đơn (vẽ tuyến thực tế / realtime)
@@ -152,6 +154,34 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, read])
+}
+
+// Tin nhắn trong app giữa khách và shiper theo từng đơn
+model Message {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id])
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+// Kênh tín hiệu cho cuộc gọi WebRTC trong app (offer/answer/ice/hangup...)
+model CallSignal {
+  id        String   @id @default(cuid())
+  orderId   String
+  fromId    String
+  toId      String
+  type      String // ring | offer | answer | ice | hangup | reject
+  payload   String   @default("") // JSON: SDP hoặc ICE candidate
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([orderId, toId, consumed])
 }
 
 // Danh sách đen: admin chặn khách / shiper

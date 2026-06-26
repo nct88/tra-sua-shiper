@@ -4,12 +4,15 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { apiGet, apiSend, fmtDistance, fmtDuration } from "@/lib/client";
 import { pointAlongRoute, type LngLat } from "@/lib/geo";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ORDER_STATUS_LABEL, nextStatus, type OrderStatus } from "@/lib/constants";
+import { nextStatus, type OrderStatus } from "@/lib/constants";
 import Map from "@/components/Map";
+import ContactPanel from "@/components/comm/ContactPanel";
 
 type Tracking = {
   code: string;
   status: string;
+  peerId: string | null;
+  customer: { id: string; name: string } | null;
   pickup: { lat: number; lng: number; name: string };
   dropoff: { lat: number; lng: number; address: string };
   route: LngLat[];
@@ -160,6 +163,11 @@ export default function ActiveDelivery({
       <p className="text-xs text-gray-400">
         Giao tới: {t.dropoff.address}
       </p>
+
+      {/* Liên lạc với khách trong app (ẩn số điện thoại) */}
+      {t.peerId && t.customer && (
+        <ContactPanel orderId={orderId} peerName={t.customer.name} />
+      )}
     </div>
   );
 }

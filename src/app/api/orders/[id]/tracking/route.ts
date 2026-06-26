@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
 import { haversine, type LngLat } from "@/lib/geo";
+import { maskPhone, counterpartId } from "@/lib/privacy";
 
 // Dữ liệu theo dõi realtime cho 1 đơn
 export async function GET(
@@ -86,7 +87,21 @@ export async function GET(
     route,
     trail,
     shipperLocation: lastPing ? { lat: lastPing.lat, lng: lastPing.lng } : null,
-    shipper: order.shipper,
+    // Đối tác liên lạc (id của bên còn lại) để chat/gọi trong app
+    peerId: counterpartId(order, user.id),
+    customer: order.customer ? { id: order.customer.id, name: order.customer.name } : null,
+    shipper: order.shipper
+      ? {
+          id: order.shipper.id,
+          name: order.shipper.name,
+          // Admin xem số thật, hai bên còn lại chỉ thấy số đã che
+          phone:
+            user.role === "ADMIN"
+              ? order.shipper.phone
+              : maskPhone(order.shipper.phone),
+          shipperProfile: order.shipper.shipperProfile,
+        }
+      : null,
     distanceMeters: order.distanceMeters,
     estimatedSeconds: order.estimatedSeconds,
     deadlineAt: order.deadlineAt,

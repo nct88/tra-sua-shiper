@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
 import { genOrderCode } from "@/lib/business";
-import { menuItem, STORE } from "@/lib/menu";
+import { STORE, resolveOrderItems, type OrderLineInput } from "@/lib/menu";
 import { fetchRoute } from "@/lib/geo";
 import { notifyAdmins } from "@/lib/notify";
 import { maskPhone } from "@/lib/privacy";
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return fail("Dữ liệu không hợp lệ");
   const { items, dropoffAddress, dropoffLat, dropoffLng, note, paymentMethod, voucherCode } = body as {
-    items?: { id: string; qty: number }[];
+    items?: OrderLineInput[];
     dropoffAddress?: string;
     dropoffLat?: number;
     dropoffLng?: number;
@@ -96,18 +96,8 @@ export async function POST(req: NextRequest) {
     return fail("Vui lòng chọn địa chỉ giao hàng trên bản đồ");
   }
 
-  // Tính tiền
-  let subtotal = 0;
-  const detailed = items
-    .map((it) => {
-      const m = menuItem(it.id);
-      if (!m) return null;
-      const qty = Math.max(1, Math.min(50, Math.floor(it.qty || 1)));
-      subtotal += m.price * qty;
-      return { id: m.id, name: m.name, price: m.price, qty };
-    })
-    .filter(Boolean);
-
+  // Tính tiền (server là nguồn giá tin cậy, gồm size + topping)
+  const { detailed, subtotal } = resolveOrderItems(items);
   if (detailed.length === 0) return fail("Món trong giỏ không hợp lệ");
 
   // Tính tuyến đường từ quán -> điểm giao (để tính phí giao theo khoảng cách)

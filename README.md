@@ -49,6 +49,8 @@ danh sách đen.
 | 👷 Vai trò Nhân viên | Tài khoản thu ngân (STAFF) riêng, chỉ vào màn hình POS |
 | 🕒 Ca làm việc & chốt ca | Mở ca (quỹ đầu), số liệu chạy realtime, chốt ca ra báo cáo Z (doanh thu, theo phương thức, tiền mặt dự kiến trong két) |
 | 🧾 In hoá đơn | Hoá đơn in được kèm QR theo dõi (giao hàng) / mã đơn (tại quầy) |
+| 🥤 Size & topping | Chọn size S/M/L (chênh giá) và topping cho từng ly; server là nguồn giá tin cậy |
+| 📚 Lịch sử ca (admin) | Xem lại mọi ca đã chốt + tổng doanh thu theo từng nhân viên |
 
 ## Chạy ở máy local
 

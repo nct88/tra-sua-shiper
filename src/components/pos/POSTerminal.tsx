@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { apiGet, apiSend, formatVnd } from "@/lib/client";
-import { MENU, STORE } from "@/lib/menu";
+import { DRINKS, STORE, lineUnitPrice, lineLabel } from "@/lib/menu";
+import { type CartLine, addLine, setLineQty, cartSubtotal, cartCount, toOrderItems } from "@/lib/cart";
 import { PAYMENT_METHODS, paymentLabel } from "@/lib/site";
+import ItemCustomizer from "@/components/ItemCustomizer";
 import Map from "@/components/Map";
 import Receipt, { type ReceiptOrder } from "./Receipt";
 
@@ -15,7 +17,8 @@ type ZReport = { report: Report; expectedCash: number; openingCash: number };
 
 export default function POSTerminal() {
   const [mode, setMode] = useState<Mode>("COUNTER");
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [lines, setLines] = useState<CartLine[]>([]);
+  const [customizing, setCustomizing] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -46,26 +49,11 @@ export default function POSTerminal() {
     loadShift();
   }, [loadShift]);
 
-  const subtotal = useMemo(
-    () =>
-      Object.entries(cart).reduce((s, [id, q]) => {
-        const m = MENU.find((x) => x.id === id);
-        return s + (m ? m.price * q : 0);
-      }, 0),
-    [cart]
-  );
-  const count = Object.values(cart).reduce((a, b) => a + b, 0);
+  const subtotal = useMemo(() => cartSubtotal(lines), [lines]);
+  const count = cartCount(lines);
 
-  const add = (id: string) => setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
-  const setQty = (id: string, q: number) =>
-    setCart((c) => {
-      const n = { ...c };
-      if (q <= 0) delete n[id];
-      else n[id] = q;
-      return n;
-    });
   const reset = () => {
-    setCart({});
+    setLines([]);
     setName("");
     setPhone("");
     setAddress("");
@@ -102,7 +90,7 @@ export default function POSTerminal() {
     try {
       const order = await apiSend<ReceiptOrder & { id: string }>("/api/pos/orders", "POST", {
         mode,
-        items: Object.entries(cart).map(([id, qty]) => ({ id, qty })),
+        items: toOrderItems(lines),
         customerName: name,
         customerPhone: phone,
         paymentMethod: pay,
@@ -179,20 +167,15 @@ export default function POSTerminal() {
       <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
         {/* Lưới món */}
         <section className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {MENU.map((m) => (
+          {DRINKS.map((m) => (
             <button
               key={m.id}
-              onClick={() => add(m.id)}
-              className="relative flex flex-col items-start rounded-xl border border-boba-200 bg-white p-2.5 text-left hover:border-boba-400 hover:shadow"
+              onClick={() => setCustomizing(m.id)}
+              className="flex flex-col items-start rounded-xl border border-boba-200 bg-white p-2.5 text-left hover:border-boba-400 hover:shadow"
             >
               <span className="text-2xl">{m.emoji}</span>
               <span className="mt-1 text-sm font-medium leading-tight text-boba-900">{m.name}</span>
               <span className="text-sm font-bold text-boba-700">{formatVnd(m.price)}</span>
-              {cart[m.id] > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-boba-600 px-1 text-xs font-bold text-white">
-                  {cart[m.id]}
-                </span>
-              )}
             </button>
           ))}
         </section>
@@ -202,20 +185,17 @@ export default function POSTerminal() {
           <div className="card space-y-2">
             <h2 className="font-bold text-boba-800">Đơn hàng ({count})</h2>
             {count === 0 && <p className="text-sm text-gray-400">Bấm vào món để thêm.</p>}
-            {Object.entries(cart).map(([id, q]) => {
-              const m = MENU.find((x) => x.id === id)!;
-              return (
-                <div key={id} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="flex-1 truncate">{m.name}</span>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => setQty(id, q - 1)} className="h-6 w-6 rounded-full border text-boba-700">−</button>
-                    <span className="w-5 text-center">{q}</span>
-                    <button onClick={() => setQty(id, q + 1)} className="h-6 w-6 rounded-full border text-boba-700">+</button>
-                  </div>
-                  <span className="w-20 text-right font-medium text-boba-700">{formatVnd(m.price * q)}</span>
+            {lines.map((l) => (
+              <div key={l.key} className="flex items-center justify-between gap-2 text-sm">
+                <span className="flex-1 leading-tight">{lineLabel(l.drinkId, l.size, l.toppings)}</span>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty - 1))} className="h-6 w-6 rounded-full border text-boba-700">−</button>
+                  <span className="w-5 text-center">{l.qty}</span>
+                  <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty + 1))} className="h-6 w-6 rounded-full border text-boba-700">+</button>
                 </div>
-              );
-            })}
+                <span className="w-20 text-right font-medium text-boba-700">{formatVnd(lineUnitPrice(l.drinkId, l.size, l.toppings) * l.qty)}</span>
+              </div>
+            ))}
           </div>
 
           <div className="card space-y-2">
@@ -279,6 +259,14 @@ export default function POSTerminal() {
           </div>
         </section>
       </div>
+
+      {customizing && (
+        <ItemCustomizer
+          drinkId={customizing}
+          onClose={() => setCustomizing(null)}
+          onAdd={(sel) => setLines((ls) => addLine(ls, sel))}
+        />
+      )}
 
       {/* Kết quả + hoá đơn */}
       {result && (

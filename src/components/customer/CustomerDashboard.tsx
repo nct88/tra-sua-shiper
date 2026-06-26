@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { apiGet, apiSend, formatVnd } from "@/lib/client";
-import { MENU, STORE } from "@/lib/menu";
+import { DRINKS, STORE, lineUnitPrice, lineLabel } from "@/lib/menu";
+import { type CartLine, addLine, setLineQty, cartSubtotal, cartCount, toOrderItems } from "@/lib/cart";
 import { TIER_LABEL } from "@/lib/business";
 import { PAYMENT_METHODS, paymentLabel, paymentIcon } from "@/lib/site";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StarsInput } from "@/components/Stars";
+import ItemCustomizer from "@/components/ItemCustomizer";
 import PaymentModal from "@/components/payment/PaymentModal";
 import Map from "@/components/Map";
 
@@ -40,7 +42,8 @@ type Order = {
 export default function CustomerDashboard() {
   const [me, setMe] = useState<Me | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [lines, setLines] = useState<CartLine[]>([]);
+  const [customizing, setCustomizing] = useState<string | null>(null);
   const [drop, setDrop] = useState<{ lat: number; lng: number }>({
     lat: 21.018,
     lng: 105.845,
@@ -73,15 +76,8 @@ export default function CustomerDashboard() {
     return () => clearInterval(t);
   }, [loadMe, loadOrders]);
 
-  const subtotal = useMemo(
-    () =>
-      Object.entries(cart).reduce((s, [id, qty]) => {
-        const m = MENU.find((x) => x.id === id);
-        return s + (m ? m.price * qty : 0);
-      }, 0),
-    [cart]
-  );
-  const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
+  const subtotal = useMemo(() => cartSubtotal(lines), [lines]);
+  const count = cartCount(lines);
 
   // Mã giảm giá hết hiệu lực khi giỏ thay đổi -> yêu cầu áp dụng lại
   useEffect(() => {
@@ -105,18 +101,9 @@ export default function CustomerDashboard() {
     }
   }
 
-  function setQty(id: string, qty: number) {
-    setCart((c) => {
-      const n = { ...c };
-      if (qty <= 0) delete n[id];
-      else n[id] = qty;
-      return n;
-    });
-  }
-
   async function placeOrder() {
     setMsg("");
-    if (cartCount === 0) return setMsg("Vui lòng chọn ít nhất 1 món");
+    if (count === 0) return setMsg("Vui lòng chọn ít nhất 1 món");
     if (!address.trim()) return setMsg("Vui lòng nhập địa chỉ giao hàng");
     setSubmitting(true);
     try {
@@ -124,7 +111,7 @@ export default function CustomerDashboard() {
         "/api/orders",
         "POST",
         {
-          items: Object.entries(cart).map(([id, qty]) => ({ id, qty })),
+          items: toOrderItems(lines),
           dropoffAddress: address,
           dropoffLat: drop.lat,
           dropoffLng: drop.lng,
@@ -133,7 +120,7 @@ export default function CustomerDashboard() {
           voucherCode: voucher?.code,
         }
       );
-      setCart({});
+      setLines([]);
       setNote("");
       setVoucher(null);
       setVoucherInput("");
@@ -193,39 +180,37 @@ export default function CustomerDashboard() {
         {/* Đặt món */}
         <section className="card space-y-3">
           <h2 className="text-lg font-bold text-boba-800">🧋 Thực đơn</h2>
-          <div className="space-y-2">
-            {MENU.map((m) => (
-              <div
+          <div className="grid grid-cols-2 gap-2">
+            {DRINKS.map((m) => (
+              <button
                 key={m.id}
-                className="flex items-center justify-between rounded-lg border border-boba-100 p-2"
+                onClick={() => setCustomizing(m.id)}
+                className="flex flex-col items-start rounded-lg border border-boba-100 p-2 text-left hover:border-boba-400"
               >
-                <div>
-                  <div className="font-medium">
-                    {m.emoji} {m.name}
-                  </div>
-                  <div className="text-xs text-gray-500">{m.desc}</div>
-                  <div className="text-sm font-semibold text-boba-700">
-                    {formatVnd(m.price)}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setQty(m.id, (cart[m.id] || 0) - 1)}
-                    className="h-7 w-7 rounded-full border text-boba-700"
-                  >
-                    −
-                  </button>
-                  <span className="w-6 text-center">{cart[m.id] || 0}</span>
-                  <button
-                    onClick={() => setQty(m.id, (cart[m.id] || 0) + 1)}
-                    className="h-7 w-7 rounded-full border text-boba-700"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
+                <span className="text-xl">{m.emoji}</span>
+                <span className="text-sm font-medium leading-tight">{m.name}</span>
+                <span className="text-sm font-semibold text-boba-700">{formatVnd(m.price)}</span>
+                <span className="text-[10px] text-boba-500">Chọn size/topping →</span>
+              </button>
             ))}
           </div>
+
+          {/* Giỏ hàng (dòng có size/topping) */}
+          {lines.length > 0 && (
+            <div className="space-y-1 border-t pt-2">
+              {lines.map((l) => (
+                <div key={l.key} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="flex-1 leading-tight">{lineLabel(l.drinkId, l.size, l.toppings)}</span>
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty - 1))} className="h-6 w-6 rounded-full border text-boba-700">−</button>
+                    <span className="w-5 text-center">{l.qty}</span>
+                    <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty + 1))} className="h-6 w-6 rounded-full border text-boba-700">+</button>
+                  </div>
+                  <span className="w-20 text-right font-medium text-boba-700">{formatVnd(lineUnitPrice(l.drinkId, l.size, l.toppings) * l.qty)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Giao tới đâu */}
@@ -311,7 +296,7 @@ export default function CustomerDashboard() {
 
           <div className="flex items-center justify-between border-t pt-3">
             <div>
-              <div className="text-sm text-gray-500">{cartCount} món</div>
+              <div className="text-sm text-gray-500">{count} món</div>
               <div className="text-xs text-gray-500">
                 Tạm tính {formatVnd(subtotal)} + ship 15.000đ
                 {voucher ? ` − giảm ${formatVnd(voucher.discount)}` : ""}
@@ -401,6 +386,14 @@ export default function CustomerDashboard() {
           })}
         </div>
       </section>
+
+      {customizing && (
+        <ItemCustomizer
+          drinkId={customizing}
+          onClose={() => setCustomizing(null)}
+          onAdd={(sel) => setLines((ls) => addLine(ls, sel))}
+        />
+      )}
 
       {payingOrder && (
         <PaymentModal

@@ -8,6 +8,7 @@ import { StarsDisplay } from "@/components/Stars";
 import { TIER_LABEL, reputationLabel } from "@/lib/business";
 import { paymentLabel, paymentIcon } from "@/lib/site";
 import FinanceDashboard from "./FinanceDashboard";
+import ShiftsPanel from "./ShiftsPanel";
 
 type Order = {
   id: string;
@@ -50,9 +51,10 @@ type Voucher = {
   expiresAt: string | null;
 };
 
-const TABS = ["finance", "orders", "customers", "shippers", "vouchers", "blacklist"] as const;
+const TABS = ["finance", "shifts", "orders", "customers", "shippers", "vouchers", "blacklist"] as const;
 const TAB_LABEL: Record<string, string> = {
   finance: "💰 Tài chính",
+  shifts: "🕒 Ca làm việc",
   orders: "📦 Đơn hàng",
   customers: "🧋 Khách hàng",
   shippers: "🛵 Shiper",
@@ -161,6 +163,8 @@ export default function AdminDashboard() {
       </div>
 
       {tab === "finance" && <FinanceDashboard />}
+
+      {tab === "shifts" && <ShiftsPanel />}
 
       {tab === "orders" && (
         <div className="card space-y-2">

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
 import { hashPassword } from "@/lib/auth";
 import { genOrderCode, pointsForOrder, tierFromPoints } from "@/lib/business";
-import { menuItem, STORE } from "@/lib/menu";
+import { STORE, resolveOrderItems, type OrderLineInput } from "@/lib/menu";
 import { fetchRoute } from "@/lib/geo";
 import { computeShippingFee } from "@/lib/finance";
 import { evaluateVoucher } from "@/lib/voucher";
@@ -67,23 +67,14 @@ export async function POST(req: NextRequest) {
   const shiftId = openShift?.id ?? null;
 
   const mode = b.mode === "COUNTER" ? "COUNTER" : "DELIVERY";
-  const items = (b.items || []) as { id: string; qty: number }[];
+  const items = (b.items || []) as OrderLineInput[];
   if (!items.length) return fail("Chưa chọn món");
 
   const VALID_PAY = ["CASH", "BANK", "CARD", "ZALOPAY", "MOMO"];
   const payMethod = VALID_PAY.includes(b.paymentMethod) ? b.paymentMethod : "CASH";
 
-  // Tính tiền món
-  let subtotal = 0;
-  const detailed = items
-    .map((it) => {
-      const m = menuItem(it.id);
-      if (!m) return null;
-      const qty = Math.max(1, Math.min(50, Math.floor(it.qty || 1)));
-      subtotal += m.price * qty;
-      return { id: m.id, name: m.name, price: m.price, qty };
-    })
-    .filter(Boolean);
+  // Tính tiền món (gồm size + topping)
+  const { detailed, subtotal } = resolveOrderItems(items);
   if (!detailed.length) return fail("Món không hợp lệ");
 
   const customer = await resolveCustomer(b.customerName, b.customerPhone);

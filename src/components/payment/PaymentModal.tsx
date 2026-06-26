@@ -48,13 +48,24 @@ export default function PaymentModal({
   const m = order.paymentMethod;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-5">
+    <div
+      className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/50 sm:items-center sm:p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="safe-bottom max-h-[92vh] w-full space-y-4 overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-sm sm:rounded-2xl">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-boba-800">
             Thanh toán · {paymentLabel(m)}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          <button
+            onClick={onClose}
+            aria-label="Đóng"
+            className="-mr-2 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            ✕
+          </button>
         </div>
 
         <div className="rounded-lg bg-boba-50 p-3 text-center">

@@ -66,15 +66,15 @@ export default function ChatPanel({
 
   return (
     <div className="flex h-full flex-col bg-white">
-      {/* Tiêu đề */}
-      <div className="flex items-center justify-between border-b border-boba-100 px-3 py-2">
-        <span className="truncate text-sm font-semibold text-boba-700">
+      {/* Tiêu đề (dính trên khi cuộn) */}
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-boba-100 bg-white px-3 py-2">
+        <span className="truncate text-base font-semibold text-boba-700">
           💬 {peerName}
         </span>
         {onClose && (
           <button
             onClick={onClose}
-            className="rounded-full px-2 py-0.5 text-lg text-gray-400 hover:bg-gray-100"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl text-gray-400 hover:bg-gray-100"
             aria-label="Đóng"
           >
             ✕
@@ -111,7 +111,7 @@ export default function ChatPanel({
           <button
             key={q}
             onClick={() => send(q)}
-            className="shrink-0 rounded-full border border-boba-200 px-2.5 py-1 text-xs text-boba-600 hover:bg-boba-50"
+            className="shrink-0 rounded-full border border-boba-200 px-3 py-2 text-xs text-boba-600 hover:bg-boba-50"
           >
             {q}
           </button>
@@ -124,7 +124,7 @@ export default function ChatPanel({
           e.preventDefault();
           send(text);
         }}
-        className="flex gap-2 border-t border-boba-100 p-2"
+        className="safe-bottom flex gap-2 border-t border-boba-100 p-2"
       >
         <input
           className="input"
@@ -132,7 +132,7 @@ export default function ChatPanel({
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <button disabled={sending} className="btn-primary shrink-0 text-sm">
+        <button disabled={sending} className="btn-primary shrink-0 px-5 text-sm">
           Gửi
         </button>
       </form>

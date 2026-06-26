@@ -89,7 +89,7 @@ export default function ShipperDashboard() {
       )}
 
       {/* Chỉ số shiper */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <div className="stat-card">
           <div className="text-xl font-bold text-boba-700">{sp?.reputationScore ?? 0}</div>
           <div className="text-[10px] leading-tight text-gray-500">
@@ -145,9 +145,9 @@ export default function ShipperDashboard() {
             return (
               <div
                 key={o.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-boba-100 p-3"
+                className="flex flex-col gap-2 rounded-lg border border-boba-100 p-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="font-semibold text-boba-800">{o.code}</div>
                   <div className="text-sm text-gray-600">
                     {items.map((i) => `${i.name} x${i.qty}`).join(", ")}
@@ -165,7 +165,7 @@ export default function ShipperDashboard() {
                 <button
                   onClick={() => accept(o.id)}
                   disabled={me?.isBlacklisted}
-                  className="btn-primary text-sm"
+                  className="btn-primary w-full text-sm sm:w-auto sm:shrink-0"
                 >
                   Nhận đơn
                 </button>

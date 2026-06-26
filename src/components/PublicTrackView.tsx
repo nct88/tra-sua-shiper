@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { apiGet, fmtDistance, fmtDuration } from "@/lib/client";
 import { StatusBadge } from "@/components/StatusBadge";
-import { STATUS_FLOW, ORDER_STATUS_LABEL, type OrderStatus } from "@/lib/constants";
+import { STATUS_FLOW, ORDER_STATUS_SHORT, type OrderStatus } from "@/lib/constants";
 import type { LngLat } from "@/lib/geo";
 import Map from "@/components/Map";
 
@@ -47,12 +47,10 @@ export default function PublicTrackView({ token }: { token: string }) {
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4">
-      <div className="flex items-center justify-between">
-        <span className="text-lg font-bold text-boba-700">🧋 Boba Ship</span>
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-boba-800">{t.code}</span>
-          <StatusBadge status={t.status} />
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 text-lg font-bold text-boba-700">🧋 Boba Ship</span>
+        <span className="ml-auto min-w-0 truncate font-bold text-boba-800">{t.code}</span>
+        <StatusBadge status={t.status} />
       </div>
 
       {t.warning.level !== "ok" && (
@@ -61,7 +59,7 @@ export default function PublicTrackView({ token }: { token: string }) {
         </div>
       )}
 
-      <div className="h-80 w-full">
+      <div className="h-[44vh] min-h-[240px] w-full sm:h-80">
         <Map
           markers={[
             { lat: t.pickup.lat, lng: t.pickup.lng, type: "store", label: t.pickup.name },
@@ -86,14 +84,17 @@ export default function PublicTrackView({ token }: { token: string }) {
 
       <div className="card">
         <div className="flex items-center justify-between">
-          {STATUS_FLOW.map((s, i) => (
-            <div key={s} className="flex flex-1 flex-col items-center text-center">
-              <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${status === "CANCELLED" ? "bg-gray-200 text-gray-400" : i <= flowIdx ? "bg-boba-600 text-white" : "bg-gray-200 text-gray-400"}`}>
-                {i + 1}
+          {STATUS_FLOW.map((s, i) => {
+            const reached = status !== "CANCELLED" && i <= flowIdx;
+            return (
+              <div key={s} className="flex flex-1 flex-col items-center text-center">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${reached ? "bg-boba-600 text-white" : "bg-gray-200 text-gray-400"}`}>
+                  {reached ? "✓" : ""}
+                </div>
+                <div className={`mt-1 text-[11px] leading-tight ${reached ? "font-medium text-boba-700" : "text-gray-500"}`}>{ORDER_STATUS_SHORT[s]}</div>
               </div>
-              <div className="mt-1 text-[10px] leading-tight text-gray-600">{ORDER_STATUS_LABEL[s]}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

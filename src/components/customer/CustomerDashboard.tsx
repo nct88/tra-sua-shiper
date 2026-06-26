@@ -140,8 +140,10 @@ export default function CustomerDashboard() {
 
   const cp = me?.customerProfile;
 
+  const grandTotal = Math.max(0, subtotal + 15000 - (voucher?.discount || 0));
+
   return (
-    <main className="mx-auto max-w-6xl space-y-4 p-3">
+    <main className="mx-auto max-w-6xl space-y-4 p-3 pb-24 md:pb-3">
       {me?.isBlacklisted && (
         <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
           ⚠️ Tài khoản của bạn đang bị hạn chế đặt đơn (danh sách đen). Vui lòng
@@ -157,17 +159,17 @@ export default function CustomerDashboard() {
             {TIER_LABEL[cp?.tier || "MOI"]}
           </div>
         </div>
-        <div className="flex gap-6 text-center">
+        <div className="flex gap-4 text-center sm:gap-6">
           <div>
-            <div className="text-2xl font-bold">{cp?.loyaltyPoints ?? 0}</div>
+            <div className="text-lg font-bold sm:text-2xl">{cp?.loyaltyPoints ?? 0}</div>
             <div className="text-xs opacity-90">Điểm thưởng</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">{cp?.totalOrders ?? 0}</div>
+            <div className="text-lg font-bold sm:text-2xl">{cp?.totalOrders ?? 0}</div>
             <div className="text-xs opacity-90">Đơn đã đặt</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">{formatVnd(cp?.totalSpent ?? 0)}</div>
+            <div className="text-lg font-bold sm:text-2xl">{formatVnd(cp?.totalSpent ?? 0)}</div>
             <div className="text-xs opacity-90">Tổng chi tiêu</div>
           </div>
         </div>
@@ -201,10 +203,10 @@ export default function CustomerDashboard() {
               {lines.map((l) => (
                 <div key={l.key} className="flex items-center justify-between gap-2 text-sm">
                   <span className="flex-1 leading-tight">{lineLabel(l.drinkId, l.size, l.toppings)}</span>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty - 1))} className="h-6 w-6 rounded-full border text-boba-700">−</button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty - 1))} className="flex h-9 w-9 items-center justify-center rounded-full border text-lg text-boba-700">−</button>
                     <span className="w-5 text-center">{l.qty}</span>
-                    <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty + 1))} className="h-6 w-6 rounded-full border text-boba-700">+</button>
+                    <button onClick={() => setLines((ls) => setLineQty(ls, l.key, l.qty + 1))} className="flex h-9 w-9 items-center justify-center rounded-full border text-lg text-boba-700">+</button>
                   </div>
                   <span className="w-20 text-right font-medium text-boba-700">{formatVnd(lineUnitPrice(l.drinkId, l.size, l.toppings) * l.qty)}</span>
                 </div>
@@ -219,7 +221,7 @@ export default function CustomerDashboard() {
           <p className="text-xs text-gray-500">
             Lấy hàng tại: <b>{STORE.name}</b> — {STORE.address}
           </p>
-          <div className="h-56 w-full">
+          <div className="h-48 w-full sm:h-56">
             <Map
               markers={[
                 { lat: STORE.lat, lng: STORE.lng, type: "store", label: STORE.name },
@@ -275,14 +277,14 @@ export default function CustomerDashboard() {
           {/* Mã giảm giá */}
           <div className="border-t pt-3">
             <div className="mb-1 text-sm font-medium text-boba-800">Mã giảm giá</div>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 className="input"
                 placeholder="Nhập mã (vd CHAOMUNG)"
                 value={voucherInput}
                 onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
               />
-              <button type="button" onClick={applyVoucher} className="btn-ghost text-sm whitespace-nowrap">
+              <button type="button" onClick={applyVoucher} className="btn-ghost text-sm sm:w-auto sm:whitespace-nowrap">
                 Áp dụng
               </button>
             </div>
@@ -329,9 +331,9 @@ export default function CustomerDashboard() {
             return (
               <div
                 key={o.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-boba-100 p-3"
+                className="flex flex-col gap-2 rounded-lg border border-boba-100 p-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-boba-800">{o.code}</span>
                     <StatusBadge status={o.status} />
@@ -356,7 +358,7 @@ export default function CustomerDashboard() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {o.paymentStatus !== "PAID" &&
                     o.paymentMethod !== "CASH" &&
                     o.status !== "CANCELLED" && (
@@ -369,12 +371,12 @@ export default function CustomerDashboard() {
                             paymentMethod: o.paymentMethod,
                           })
                         }
-                        className="btn-primary text-sm"
+                        className="btn-primary flex-1 text-sm sm:flex-none"
                       >
                         Thanh toán
                       </button>
                     )}
-                  <Link href={`/track/${o.id}`} className="btn-ghost text-sm">
+                  <Link href={`/track/${o.id}`} className="btn-ghost flex-1 text-sm sm:flex-none">
                     Theo dõi
                   </Link>
                   {o.status === "DELIVERED" && !o.rating && (
@@ -386,6 +388,25 @@ export default function CustomerDashboard() {
           })}
         </div>
       </section>
+
+      {/* Thanh đặt đơn dính đáy trên mobile: luôn trong tầm ngón cái */}
+      {count > 0 && (
+        <div className="safe-bottom fixed inset-x-0 bottom-0 z-[1500] border-t border-boba-200 bg-white px-4 pt-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] md:hidden">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+            <div className="leading-tight">
+              <div className="text-xs text-gray-500">{count} món</div>
+              <div className="text-lg font-bold text-boba-700">{formatVnd(grandTotal)}</div>
+            </div>
+            <button
+              onClick={placeOrder}
+              disabled={submitting || me?.isBlacklisted}
+              className="btn-primary flex-1 text-base"
+            >
+              {submitting ? "Đang đặt…" : "Đặt đơn"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {customizing && (
         <ItemCustomizer
@@ -434,8 +455,14 @@ function RateButton({ orderId, onDone }: { orderId: string; onDone: () => void }
         Đánh giá &amp; Tip
       </button>
       {open && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm space-y-3 rounded-2xl bg-white p-5">
+        <div
+          className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 sm:items-center sm:p-4"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full space-y-3 overflow-y-auto rounded-t-2xl bg-white p-5 sm:max-w-sm sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-lg font-bold text-boba-800">Đánh giá shiper</h3>
             <StarsInput value={stars} onChange={setStars} />
             <textarea
@@ -451,7 +478,7 @@ function RateButton({ orderId, onDone }: { orderId: string; onDone: () => void }
                   <button
                     key={v}
                     onClick={() => setTip(v)}
-                    className={`rounded-lg border px-3 py-1 text-sm ${
+                    className={`min-h-[40px] rounded-lg border px-3 py-2 text-sm ${
                       tip === v ? "border-boba-500 bg-boba-50 font-semibold" : ""
                     }`}
                   >

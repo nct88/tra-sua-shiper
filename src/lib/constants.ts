@@ -37,6 +37,16 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   CANCELLED: "Đã huỷ",
 };
 
+// Nhãn ngắn cho thanh tiến trình (hiển thị dưới mỗi bước)
+export const ORDER_STATUS_SHORT: Record<OrderStatus, string> = {
+  PENDING: "Chờ nhận",
+  ACCEPTED: "Đã nhận",
+  PICKED_UP: "Đã lấy",
+  DELIVERING: "Đang giao",
+  DELIVERED: "Đã giao",
+  CANCELLED: "Đã huỷ",
+};
+
 export const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
   PENDING: "bg-gray-100 text-gray-700",
   ACCEPTED: "bg-blue-100 text-blue-700",

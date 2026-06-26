@@ -178,7 +178,7 @@ export default function ActiveDelivery({
         </div>
       )}
 
-      <div className="h-64 w-full">
+      <div className="h-[40vh] min-h-[200px] w-full sm:h-72">
         <Map
           markers={[
             { lat: t.pickup.lat, lng: t.pickup.lng, type: "store", label: t.pickup.name },
@@ -193,49 +193,59 @@ export default function ActiveDelivery({
         />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => setMoving((m) => !m)}
-          disabled={realGps}
-          className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
-            moving ? "bg-red-500" : "bg-blue-600"
-          }`}
-        >
-          {moving ? "⏸ Dừng di chuyển" : "▶️ Di chuyển (GPS giả lập)"}
-        </button>
-
-        <button
-          onClick={() => {
-            setRealGps((v) => !v);
-            if (!realGps) setMoving(false);
-          }}
-          className={`rounded-lg px-4 py-2 text-sm font-medium ${
-            realGps ? "bg-green-600 text-white" : "border border-green-500 text-green-700"
-          }`}
-        >
-          {realGps ? "📡 Đang dùng GPS thật" : "📍 Dùng GPS thật"}
-        </button>
-
-        <button
-          onClick={sos}
-          className="rounded-lg border border-red-500 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
-        >
-          🆘 SOS
-        </button>
-
+      <div className="space-y-2">
+        {/* Hành động chính: nút lớn, full-width, dễ chạm một tay */}
         {next && (
-          <button onClick={advance} className="btn-primary text-sm">
+          <button
+            onClick={advance}
+            className="btn-primary w-full py-3.5 text-base font-semibold"
+          >
             {status === "ACCEPTED" && "✅ Đã lấy hàng tại quán"}
             {status === "PICKED_UP" && "🛵 Bắt đầu giao"}
             {status === "DELIVERING" && "📦 Hoàn tất giao hàng"}
           </button>
         )}
 
-        {status !== "DELIVERED" && (
-          <button onClick={cancel} className="btn-ghost text-sm text-red-600">
-            Huỷ đơn
+        {/* Hành động phụ: lưới 2 cột, mỗi ô ≥ 44px */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setMoving((m) => !m)}
+            disabled={realGps}
+            className={`flex min-h-[44px] items-center justify-center rounded-lg px-3 text-sm font-medium text-white disabled:opacity-50 ${
+              moving ? "bg-red-500" : "bg-blue-600"
+            }`}
+          >
+            {moving ? "⏸ Dừng" : "▶️ Di chuyển"}
           </button>
-        )}
+
+          <button
+            onClick={() => {
+              setRealGps((v) => !v);
+              if (!realGps) setMoving(false);
+            }}
+            className={`flex min-h-[44px] items-center justify-center rounded-lg px-3 text-sm font-medium ${
+              realGps ? "bg-green-600 text-white" : "border border-green-500 text-green-700"
+            }`}
+          >
+            {realGps ? "📡 GPS thật" : "📍 GPS thật"}
+          </button>
+
+          <button
+            onClick={sos}
+            className="flex min-h-[44px] items-center justify-center rounded-lg border border-red-500 px-3 text-sm font-bold text-red-600 hover:bg-red-50"
+          >
+            🆘 SOS
+          </button>
+
+          {status !== "DELIVERED" && (
+            <button
+              onClick={cancel}
+              className="flex min-h-[44px] items-center justify-center rounded-lg border border-boba-300 px-3 text-sm font-medium text-red-600 hover:bg-boba-100"
+            >
+              Huỷ đơn
+            </button>
+          )}
+        </div>
       </div>
 
       <p className="text-xs text-gray-400">

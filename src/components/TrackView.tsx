@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apiGet, apiSend, fmtDistance, fmtDuration } from "@/lib/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StarsDisplay } from "@/components/Stars";
-import { STATUS_FLOW, ORDER_STATUS_LABEL, roleHome, type OrderStatus } from "@/lib/constants";
+import { STATUS_FLOW, ORDER_STATUS_SHORT, roleHome, type OrderStatus } from "@/lib/constants";
 import { reputationLabel } from "@/lib/business";
 import type { LngLat } from "@/lib/geo";
 import Map from "@/components/Map";
@@ -97,26 +97,31 @@ export default function TrackView({
 
   return (
     <main className="mx-auto max-w-3xl space-y-3 p-3">
-      <div className="flex items-center justify-between">
-        <Link href={backHref} className="text-sm text-boba-600">← Quay lại</Link>
-        <div className="flex items-center gap-2">
-          {t.shareToken && status !== "CANCELLED" && (
-            <button
-              onClick={() => {
-                const url = `${window.location.origin}/theo-doi/${t.shareToken}`;
-                navigator.clipboard?.writeText(url).then(
-                  () => alert("Đã sao chép link chia sẻ:\n" + url),
-                  () => prompt("Link chia sẻ:", url)
-                );
-              }}
-              className="btn-ghost text-xs"
-            >
-              🔗 Chia sẻ
-            </button>
-          )}
-          <span className="font-bold text-boba-800">{t.code}</span>
-          <StatusBadge status={t.status} />
-        </div>
+      <div className="flex items-center gap-2">
+        <Link
+          href={backHref}
+          aria-label="Quay lại"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg text-boba-600 hover:bg-boba-100"
+        >
+          ←
+        </Link>
+        <span className="min-w-0 truncate font-bold text-boba-800">{t.code}</span>
+        <StatusBadge status={t.status} />
+        {t.shareToken && status !== "CANCELLED" && (
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/theo-doi/${t.shareToken}`;
+              navigator.clipboard?.writeText(url).then(
+                () => alert("Đã sao chép link chia sẻ:\n" + url),
+                () => prompt("Link chia sẻ:", url)
+              );
+            }}
+            aria-label="Chia sẻ link theo dõi"
+            className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-boba-600 hover:bg-boba-100"
+          >
+            🔗
+          </button>
+        )}
       </div>
 
       {/* Cảnh báo thời gian */}
@@ -133,7 +138,7 @@ export default function TrackView({
       )}
 
       {/* Bản đồ realtime */}
-      <div className="h-60 w-full">
+      <div className="h-[44vh] min-h-[240px] w-full sm:h-80">
         <Map
           markers={[
             { lat: t.pickup.lat, lng: t.pickup.lng, type: "store", label: t.pickup.name },
@@ -167,24 +172,27 @@ export default function TrackView({
       {/* Tiến trình đơn */}
       <div className="card">
         <div className="flex items-center justify-between">
-          {STATUS_FLOW.map((s, i) => (
-            <div key={s} className="flex flex-1 flex-col items-center text-center">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                  status === "CANCELLED"
-                    ? "bg-gray-200 text-gray-400"
-                    : i <= flowIdx
-                    ? "bg-boba-600 text-white"
-                    : "bg-gray-200 text-gray-400"
-                }`}
-              >
-                {i + 1}
+          {STATUS_FLOW.map((s, i) => {
+            const reached = status !== "CANCELLED" && i <= flowIdx;
+            return (
+              <div key={s} className="flex flex-1 flex-col items-center text-center">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
+                    reached ? "bg-boba-600 text-white" : "bg-gray-200 text-gray-400"
+                  }`}
+                >
+                  {reached ? "✓" : ""}
+                </div>
+                <div
+                  className={`mt-1 text-[11px] leading-tight ${
+                    reached ? "font-medium text-boba-700" : "text-gray-500"
+                  }`}
+                >
+                  {ORDER_STATUS_SHORT[s]}
+                </div>
               </div>
-              <div className="mt-1 text-[10px] leading-tight text-gray-600">
-                {ORDER_STATUS_LABEL[s]}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         {status === "CANCELLED" && (
           <p className="mt-2 text-center text-sm text-red-500">Đơn đã bị huỷ</p>
@@ -217,7 +225,7 @@ export default function TrackView({
           {role === "CUSTOMER" && status !== "DELIVERED" && (
             <button
               onClick={sos}
-              className="w-full rounded-xl border border-red-500 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
+              className="min-h-[48px] w-full rounded-xl border border-red-500 py-3 text-sm font-bold text-red-600 hover:bg-red-50"
             >
               🆘 Báo sự cố khẩn cấp (SOS)
             </button>

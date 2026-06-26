@@ -35,6 +35,10 @@ danh sách đen.
 | 💳 Thanh toán (demo) | 5 hình thức: tiền mặt, chuyển khoản/VietQR, thẻ, ZaloPay, MoMo (mô phỏng) |
 | 🎧 Trang hỗ trợ | Tổng đài, hotline, email, Messenger, Telegram, Zalo, FAQ |
 | 📄 Chính sách | Quyền riêng tư, bảo mật, thanh toán, giao hàng |
+| 🎟️ Mã giảm giá | Voucher theo %/số tiền, đơn tối thiểu, hạng thành viên, giới hạn lượt; admin tạo/tắt mã |
+| 📍 GPS thật | Shiper bật định vị thiết bị thật (watchPosition) thay cho giả lập |
+| 🆘 SOS an toàn | Khách/shiper báo khẩn cấp kèm vị trí tới tổng đài & bên còn lại |
+| 🎯 Tự động phân công | Admin gán shiper gần nhất (đang online, không bị chặn) cho đơn chờ |
 
 ## Chạy ở máy local
 

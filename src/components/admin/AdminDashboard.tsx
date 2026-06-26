@@ -33,11 +33,28 @@ type AdminUser = {
   shipperProfile?: { ratingAvg: number; ratingCount: number; completedOrders: number; cancelledOrders: number; reputationScore: number; totalTips: number } | null;
 };
 
-const TABS = ["orders", "customers", "shippers", "blacklist"] as const;
+type Voucher = {
+  id: string;
+  code: string;
+  description: string;
+  discountType: string;
+  discountValue: number;
+  minOrder: number;
+  maxDiscount: number | null;
+  minTier: string;
+  usageLimit: number | null;
+  usedCount: number;
+  perUserLimit: number;
+  active: boolean;
+  expiresAt: string | null;
+};
+
+const TABS = ["orders", "customers", "shippers", "vouchers", "blacklist"] as const;
 const TAB_LABEL: Record<string, string> = {
   orders: "📦 Đơn hàng",
   customers: "🧋 Khách hàng",
   shippers: "🛵 Shiper",
+  vouchers: "🎟️ Khuyến mãi",
   blacklist: "🚫 Danh sách đen",
 };
 
@@ -46,17 +63,20 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<AdminUser[]>([]);
   const [shippers, setShippers] = useState<AdminUser[]>([]);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
 
   const load = useCallback(async () => {
     try {
-      const [o, c, s] = await Promise.all([
+      const [o, c, s, v] = await Promise.all([
         apiGet<Order[]>("/api/orders"),
         apiGet<AdminUser[]>("/api/admin/users?role=CUSTOMER"),
         apiGet<AdminUser[]>("/api/admin/users?role=SHIPPER"),
+        apiGet<Voucher[]>("/api/admin/vouchers"),
       ]);
       setOrders(o);
       setCustomers(c);
       setShippers(s);
+      setVouchers(v);
     } catch {}
   }, []);
 
@@ -75,6 +95,25 @@ export default function AdminDashboard() {
         if (!reason) return;
         await apiSend("/api/admin/blacklist", "POST", { userId: u.id, reason });
       }
+      load();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  }
+
+  async function autoAssign(id: string) {
+    try {
+      const r = await apiSend<{ shipperName: string }>(`/api/orders/${id}/assign`, "POST");
+      alert("Đã phân công cho shiper: " + r.shipperName);
+      load();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  }
+
+  async function toggleVoucher(id: string) {
+    try {
+      await apiSend("/api/admin/vouchers", "PATCH", { id });
       load();
     } catch (e: any) {
       alert(e.message);
@@ -136,6 +175,11 @@ export default function AdminDashboard() {
                   {formatVnd(o.total)}
                   {o.tip > 0 && <span className="text-green-600"> +tip {formatVnd(o.tip)}</span>}
                 </span>
+                {o.status === "PENDING" && !o.shipper && (
+                  <button onClick={() => autoAssign(o.id)} className="btn-primary text-sm whitespace-nowrap">
+                    Tự động phân công
+                  </button>
+                )}
                 <Link href={`/track/${o.id}`} className="btn-ghost text-sm">Xem</Link>
               </div>
             </div>
@@ -210,6 +254,10 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {tab === "vouchers" && (
+        <VoucherManager vouchers={vouchers} onChange={load} onToggle={toggleVoucher} />
+      )}
+
       {tab === "blacklist" && (
         <div className="card space-y-2">
           {[...customers, ...shippers].filter((u) => u.isBlacklisted).map((u) => (
@@ -239,6 +287,104 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="card text-center">
       <div className="text-xl font-bold text-boba-700">{value}</div>
       <div className="text-xs text-gray-500">{label}</div>
+    </div>
+  );
+}
+
+function VoucherManager({
+  vouchers,
+  onChange,
+  onToggle,
+}: {
+  vouchers: Voucher[];
+  onChange: () => void;
+  onToggle: (id: string) => void;
+}) {
+  const [form, setForm] = useState({
+    code: "",
+    description: "",
+    discountType: "PERCENT",
+    discountValue: "",
+    minOrder: "",
+    maxDiscount: "",
+    minTier: "MOI",
+    usageLimit: "",
+    perUserLimit: "1",
+  });
+  const [err, setErr] = useState("");
+
+  async function create() {
+    setErr("");
+    try {
+      await apiSend("/api/admin/vouchers", "POST", {
+        ...form,
+        discountValue: Number(form.discountValue),
+        minOrder: Number(form.minOrder) || 0,
+        maxDiscount: form.maxDiscount ? Number(form.maxDiscount) : null,
+        usageLimit: form.usageLimit ? Number(form.usageLimit) : null,
+        perUserLimit: Number(form.perUserLimit) || 1,
+      });
+      setForm({ ...form, code: "", description: "", discountValue: "" });
+      onChange();
+    } catch (e: any) {
+      setErr(e.message);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="card space-y-2">
+        <h3 className="font-bold text-boba-800">Tạo mã khuyến mãi</h3>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <input className="input" placeholder="Mã (vd CHAOMUNG)" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} />
+          <input className="input" placeholder="Mô tả" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <select className="input" value={form.discountType} onChange={(e) => setForm({ ...form, discountType: e.target.value })}>
+            <option value="PERCENT">Giảm theo %</option>
+            <option value="AMOUNT">Giảm số tiền</option>
+          </select>
+          <input className="input" type="number" placeholder={form.discountType === "PERCENT" ? "Phần trăm (vd 20)" : "Số tiền (vd 15000)"} value={form.discountValue} onChange={(e) => setForm({ ...form, discountValue: e.target.value })} />
+          <input className="input" type="number" placeholder="Đơn tối thiểu (đ)" value={form.minOrder} onChange={(e) => setForm({ ...form, minOrder: e.target.value })} />
+          {form.discountType === "PERCENT" && (
+            <input className="input" type="number" placeholder="Giảm tối đa (đ)" value={form.maxDiscount} onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })} />
+          )}
+          <select className="input" value={form.minTier} onChange={(e) => setForm({ ...form, minTier: e.target.value })}>
+            <option value="MOI">Mọi hạng</option>
+            <option value="BAC">Từ hạng Bạc</option>
+            <option value="VANG">Từ hạng Vàng</option>
+            <option value="KIM_CUONG">Hạng Kim Cương</option>
+          </select>
+          <input className="input" type="number" placeholder="Tổng lượt (trống = vô hạn)" value={form.usageLimit} onChange={(e) => setForm({ ...form, usageLimit: e.target.value })} />
+          <input className="input" type="number" placeholder="Lượt/người" value={form.perUserLimit} onChange={(e) => setForm({ ...form, perUserLimit: e.target.value })} />
+        </div>
+        {err && <p className="text-sm text-red-500">{err}</p>}
+        <button onClick={create} className="btn-primary text-sm">Tạo mã</button>
+      </div>
+
+      <div className="card space-y-2">
+        <h3 className="font-bold text-boba-800">Danh sách mã ({vouchers.length})</h3>
+        {vouchers.length === 0 && <p className="text-sm text-gray-400">Chưa có mã.</p>}
+        {vouchers.map((v) => (
+          <div key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-boba-100 p-3">
+            <div>
+              <div className="font-bold text-boba-800">
+                {v.code}{" "}
+                <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] ${v.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                  {v.active ? "đang bật" : "đã tắt"}
+                </span>
+              </div>
+              <div className="text-xs text-gray-500">{v.description}</div>
+              <div className="text-xs text-gray-400">
+                {v.discountType === "PERCENT" ? `Giảm ${v.discountValue}%` : `Giảm ${formatVnd(v.discountValue)}`}
+                {v.minOrder ? ` • đơn từ ${formatVnd(v.minOrder)}` : ""}
+                {` • đã dùng ${v.usedCount}${v.usageLimit ? "/" + v.usageLimit : ""}`}
+              </div>
+            </div>
+            <button onClick={() => onToggle(v.id)} className="btn-ghost text-sm">
+              {v.active ? "Tắt" : "Bật"}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

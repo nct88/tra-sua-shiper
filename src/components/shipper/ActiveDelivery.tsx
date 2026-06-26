@@ -32,8 +32,10 @@ export default function ActiveDelivery({
 }) {
   const [t, setT] = useState<Tracking | null>(null);
   const [moving, setMoving] = useState(false);
+  const [realGps, setRealGps] = useState(false);
   const progressRef = useRef(0);
   const movingRef = useRef(false);
+  const watchRef = useRef<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -69,6 +71,62 @@ export default function ActiveDelivery({
     return () => clearInterval(tick);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, t?.route?.length]);
+
+  // GPS thật từ thiết bị (watchPosition) -> gửi vị trí thực tế
+  useEffect(() => {
+    if (!realGps) {
+      if (watchRef.current != null) {
+        navigator.geolocation.clearWatch(watchRef.current);
+        watchRef.current = null;
+      }
+      return;
+    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      alert("Trình duyệt không hỗ trợ định vị");
+      setRealGps(false);
+      return;
+    }
+    watchRef.current = navigator.geolocation.watchPosition(
+      async (pos) => {
+        try {
+          await apiSend(`/api/orders/${orderId}/location`, "POST", {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        } catch {}
+        load();
+      },
+      () => {
+        alert("Không lấy được vị trí. Hãy cho phép quyền định vị.");
+        setRealGps(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 2000 }
+    );
+    return () => {
+      if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
+    };
+  }, [realGps, orderId, load]);
+
+  // Gửi tín hiệu SOS kèm vị trí hiện tại
+  function sos() {
+    if (!confirm("Gửi tín hiệu khẩn cấp SOS tới tổng đài?")) return;
+    const send = async (lat?: number, lng?: number) => {
+      try {
+        await apiSend(`/api/orders/${orderId}/sos`, "POST", { lat, lng });
+        alert("Đã gửi SOS. Tổng đài đang xử lý.");
+      } catch (e: any) {
+        alert(e.message);
+      }
+    };
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (p) => send(p.coords.latitude, p.coords.longitude),
+        () => send(t?.shipperLocation?.lat, t?.shipperLocation?.lng)
+      );
+    } else {
+      send(t?.shipperLocation?.lat, t?.shipperLocation?.lng);
+    }
+  }
 
   async function advance() {
     try {
@@ -138,11 +196,31 @@ export default function ActiveDelivery({
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setMoving((m) => !m)}
-          className={`rounded-lg px-4 py-2 text-sm font-medium text-white ${
+          disabled={realGps}
+          className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
             moving ? "bg-red-500" : "bg-blue-600"
           }`}
         >
-          {moving ? "⏸ Dừng di chuyển" : "▶️ Bắt đầu di chuyển (GPS giả lập)"}
+          {moving ? "⏸ Dừng di chuyển" : "▶️ Di chuyển (GPS giả lập)"}
+        </button>
+
+        <button
+          onClick={() => {
+            setRealGps((v) => !v);
+            if (!realGps) setMoving(false);
+          }}
+          className={`rounded-lg px-4 py-2 text-sm font-medium ${
+            realGps ? "bg-green-600 text-white" : "border border-green-500 text-green-700"
+          }`}
+        >
+          {realGps ? "📡 Đang dùng GPS thật" : "📍 Dùng GPS thật"}
+        </button>
+
+        <button
+          onClick={sos}
+          className="rounded-lg border border-red-500 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
+        >
+          🆘 SOS
         </button>
 
         {next && (

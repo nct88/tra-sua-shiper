@@ -6,6 +6,7 @@ import { menuItem, STORE, DEFAULT_SHIPPING_FEE } from "@/lib/menu";
 import { fetchRoute } from "@/lib/geo";
 import { notifyAdmins } from "@/lib/notify";
 import { maskPhone } from "@/lib/privacy";
+import { evaluateVoucher } from "@/lib/voucher";
 
 // GET /api/orders?scope=available|mine
 export async function GET(req: NextRequest) {
@@ -67,13 +68,14 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   if (!body) return fail("Dữ liệu không hợp lệ");
-  const { items, dropoffAddress, dropoffLat, dropoffLng, note, paymentMethod } = body as {
+  const { items, dropoffAddress, dropoffLat, dropoffLng, note, paymentMethod, voucherCode } = body as {
     items?: { id: string; qty: number }[];
     dropoffAddress?: string;
     dropoffLat?: number;
     dropoffLng?: number;
     note?: string;
     paymentMethod?: string;
+    voucherCode?: string;
   };
 
   const VALID_PAY = ["CASH", "BANK", "CARD", "ZALOPAY", "MOMO"];
@@ -103,7 +105,19 @@ export async function POST(req: NextRequest) {
   if (detailed.length === 0) return fail("Món trong giỏ không hợp lệ");
 
   const shippingFee = DEFAULT_SHIPPING_FEE;
-  const total = subtotal + shippingFee;
+
+  // Áp dụng mã giảm giá (nếu có) - kiểm tra lại ở server
+  let discount = 0;
+  let appliedCode: string | null = null;
+  if (voucherCode && voucherCode.trim()) {
+    const tier = user.customerProfile?.tier || "MOI";
+    const vr = await evaluateVoucher(voucherCode, subtotal, user.id, tier);
+    if (!vr.ok) return fail(vr.error);
+    discount = vr.discount;
+    appliedCode = vr.code;
+  }
+
+  const total = Math.max(0, subtotal + shippingFee - discount);
 
   // Tính tuyến đường từ quán -> điểm giao
   const route = await fetchRoute(
@@ -118,6 +132,8 @@ export async function POST(req: NextRequest) {
       itemsJson: JSON.stringify(detailed),
       subtotal,
       shippingFee,
+      discount,
+      voucherCode: appliedCode,
       total,
       pickupName: STORE.name,
       pickupAddress: STORE.address,
@@ -134,6 +150,20 @@ export async function POST(req: NextRequest) {
       paymentStatus: "UNPAID",
     },
   });
+
+  // Ghi nhận lượt dùng voucher
+  if (appliedCode) {
+    const v = await prisma.voucher.findUnique({ where: { code: appliedCode } });
+    if (v) {
+      await prisma.voucherRedemption.create({
+        data: { voucherId: v.id, userId: user.id, orderId: order.id },
+      });
+      await prisma.voucher.update({
+        where: { id: v.id },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
+  }
 
   await notifyAdmins({
     type: "ORDER",

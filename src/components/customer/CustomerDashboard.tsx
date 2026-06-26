@@ -49,6 +49,9 @@ export default function CustomerDashboard() {
   const [note, setNote] = useState("");
   const [payMethod, setPayMethod] = useState("CASH");
   const [payingOrder, setPayingOrder] = useState<{ id: string; code: string; total: number; paymentMethod: string } | null>(null);
+  const [voucherInput, setVoucherInput] = useState("");
+  const [voucher, setVoucher] = useState<{ code: string; discount: number; description: string } | null>(null);
+  const [voucherErr, setVoucherErr] = useState("");
   const [msg, setMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -80,6 +83,28 @@ export default function CustomerDashboard() {
   );
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
+  // Mã giảm giá hết hiệu lực khi giỏ thay đổi -> yêu cầu áp dụng lại
+  useEffect(() => {
+    setVoucher(null);
+    setVoucherErr("");
+  }, [subtotal]);
+
+  async function applyVoucher() {
+    setVoucherErr("");
+    if (!voucherInput.trim()) return;
+    try {
+      const r = await apiSend<{ code: string; discount: number; description: string }>(
+        "/api/vouchers/validate",
+        "POST",
+        { code: voucherInput, subtotal }
+      );
+      setVoucher(r);
+    } catch (e: any) {
+      setVoucher(null);
+      setVoucherErr(e.message);
+    }
+  }
+
   function setQty(id: string, qty: number) {
     setCart((c) => {
       const n = { ...c };
@@ -105,10 +130,13 @@ export default function CustomerDashboard() {
           dropoffLng: drop.lng,
           note,
           paymentMethod: payMethod,
+          voucherCode: voucher?.code,
         }
       );
       setCart({});
       setNote("");
+      setVoucher(null);
+      setVoucherInput("");
       if (payMethod === "CASH") {
         setMsg("✅ Đặt đơn thành công! Thanh toán tiền mặt khi nhận hàng.");
       } else {
@@ -254,11 +282,37 @@ export default function CustomerDashboard() {
             </div>
           </div>
 
+          {/* Mã giảm giá */}
+          <div className="border-t pt-3">
+            <div className="mb-1 text-sm font-medium text-boba-800">Mã giảm giá</div>
+            <div className="flex gap-2">
+              <input
+                className="input"
+                placeholder="Nhập mã (vd CHAOMUNG)"
+                value={voucherInput}
+                onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
+              />
+              <button type="button" onClick={applyVoucher} className="btn-ghost text-sm whitespace-nowrap">
+                Áp dụng
+              </button>
+            </div>
+            {voucherErr && <p className="mt-1 text-xs text-red-500">{voucherErr}</p>}
+            {voucher && (
+              <p className="mt-1 text-xs text-green-600">
+                ✅ {voucher.description} — giảm {formatVnd(voucher.discount)}
+              </p>
+            )}
+          </div>
+
           <div className="flex items-center justify-between border-t pt-3">
             <div>
               <div className="text-sm text-gray-500">{cartCount} món</div>
+              <div className="text-xs text-gray-500">
+                Tạm tính {formatVnd(subtotal)} + ship 15.000đ
+                {voucher ? ` − giảm ${formatVnd(voucher.discount)}` : ""}
+              </div>
               <div className="text-lg font-bold text-boba-700">
-                {formatVnd(subtotal)} <span className="text-xs font-normal text-gray-500">+ ship 15.000đ</span>
+                {formatVnd(Math.max(0, subtotal + 15000 - (voucher?.discount || 0)))}
               </div>
             </div>
             <button

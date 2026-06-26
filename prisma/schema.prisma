@@ -82,6 +82,8 @@ model Order {
   itemsJson String // JSON các món trà sữa
   subtotal  Float
   shippingFee Float @default(15000)
+  discount  Float  @default(0)
+  voucherCode String?
   total     Float
 
   // Điểm lấy hàng (quán)
@@ -188,6 +190,37 @@ model CallSignal {
   createdAt DateTime @default(now())
 
   @@index([orderId, toId, consumed])
+}
+
+// Mã giảm giá / khuyến mãi
+model Voucher {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  description   String
+  discountType  String // PERCENT | AMOUNT
+  discountValue Float
+  minOrder      Float    @default(0)
+  maxDiscount   Float? // trần giảm cho loại PERCENT
+  minTier       String   @default("MOI") // hạng tối thiểu: MOI|BAC|VANG|KIM_CUONG
+  usageLimit    Int? // tổng lượt dùng (null = không giới hạn)
+  usedCount     Int      @default(0)
+  perUserLimit  Int      @default(1)
+  active        Boolean  @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  redemptions VoucherRedemption[]
+}
+
+model VoucherRedemption {
+  id        String   @id @default(cuid())
+  voucherId String
+  voucher   Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  userId    String
+  orderId   String
+  createdAt DateTime @default(now())
+
+  @@index([voucherId, userId])
 }
 
 // Danh sách đen: admin chặn khách / shiper

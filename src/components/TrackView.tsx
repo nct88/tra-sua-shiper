@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { apiGet, fmtDistance, fmtDuration } from "@/lib/client";
+import { apiGet, apiSend, fmtDistance, fmtDuration } from "@/lib/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StarsDisplay } from "@/components/Stars";
 import { STATUS_FLOW, ORDER_STATUS_LABEL, type OrderStatus } from "@/lib/constants";
@@ -61,6 +61,24 @@ export default function TrackView({
   }, [load]);
 
   const backHref = role === "ADMIN" ? "/admin" : role === "SHIPPER" ? "/shipper" : "/customer";
+
+  function sos() {
+    if (!confirm("Gửi tín hiệu khẩn cấp SOS tới tổng đài?")) return;
+    const send = async (lat?: number, lng?: number) => {
+      try {
+        await apiSend(`/api/orders/${orderId}/sos`, "POST", { lat, lng });
+        alert("Đã gửi SOS. Tổng đài đang xử lý.");
+      } catch (e: any) {
+        alert(e.message);
+      }
+    };
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (p) => send(p.coords.latitude, p.coords.longitude),
+        () => send()
+      );
+    } else send();
+  }
 
   if (err) {
     return (
@@ -179,7 +197,17 @@ export default function TrackView({
 
       {/* Liên lạc trong app (ẩn số điện thoại) */}
       {t.peerId && t.shipper && status !== "CANCELLED" && (
-        <ContactPanel orderId={orderId} peerName={t.shipper.name} />
+        <>
+          <ContactPanel orderId={orderId} peerName={t.shipper.name} />
+          {role === "CUSTOMER" && status !== "DELIVERED" && (
+            <button
+              onClick={sos}
+              className="w-full rounded-xl border border-red-500 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
+            >
+              🆘 Báo sự cố khẩn cấp (SOS)
+            </button>
+          )}
+        </>
       )}
     </main>
   );

@@ -92,6 +92,20 @@ async function main() {
     });
   }
 
+  // Mã giảm giá demo
+  const vouchers = [
+    { code: "CHAOMUNG", description: "Chào mừng khách mới - giảm 20% tối đa 20k", discountType: "PERCENT", discountValue: 20, minOrder: 0, maxDiscount: 20000, minTier: "MOI", perUserLimit: 1 },
+    { code: "FREESHIP", description: "Giảm 15k cho đơn từ 50k", discountType: "AMOUNT", discountValue: 15000, minOrder: 50000, minTier: "MOI", perUserLimit: 5 },
+    { code: "VIP30", description: "Ưu đãi hạng Bạc trở lên - giảm 30k đơn từ 100k", discountType: "AMOUNT", discountValue: 30000, minOrder: 100000, minTier: "BAC", perUserLimit: 3 },
+  ];
+  for (const v of vouchers) {
+    await prisma.voucher.upsert({
+      where: { code: v.code },
+      update: {},
+      create: v as any,
+    });
+  }
+
   console.log("✅ Seed xong! Tài khoản demo (mật khẩu 123456):");
   console.log("   Admin:  0900000000");
   console.log("   Khách:  0911111111");

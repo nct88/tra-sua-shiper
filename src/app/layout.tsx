@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import NativeInit from "@/components/NativeInit";
 
 export const metadata: Metadata = {
   title: "Boba Ship - Giao trà sữa realtime",
@@ -23,7 +24,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <NativeInit />
+        {children}
+      </body>
     </html>
   );
 }

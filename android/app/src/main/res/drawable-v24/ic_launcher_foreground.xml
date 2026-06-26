@@ -1,0 +1,34 @@
+<!-- Icon Boba Ship: ly trà sữa (vector, không cần ảnh PNG) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Thân cốc (kem) -->
+    <path
+        android:fillColor="#F8E7D8"
+        android:pathData="M39,49 l30,0 l-3.5,33 a4,4 0 0 1 -4,3.5 l-15,0 a4,4 0 0 1 -4,-3.5 z" />
+
+    <!-- Trà bên trong -->
+    <path
+        android:fillColor="#C06A34"
+        android:pathData="M42,55 l24,0 l-2.8,26 a3.5,3.5 0 0 1 -3.5,3 l-8.4,0 a3.5,3.5 0 0 1 -3.5,-3 z" />
+
+    <!-- Trân châu -->
+    <path
+        android:fillColor="#3A2418"
+        android:pathData="M49,79 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z
+                          M54.5,81 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z
+                          M60,79 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 z" />
+
+    <!-- Ống hút -->
+    <path
+        android:fillColor="#E0533A"
+        android:pathData="M60,46 l3.4,0 l8,-22 l-3.4,0 z" />
+
+    <!-- Nắp cốc (kem) -->
+    <path
+        android:fillColor="#F8E7D8"
+        android:pathData="M40,43 l28,0 a3.2,3.2 0 0 1 0,6.4 l-28,0 a3.2,3.2 0 0 1 0,-6.4 z" />
+</vector>

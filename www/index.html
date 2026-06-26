@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Boba Ship</title>
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #f8e7d8, #e0a87f);
+        color: #6a3522;
+      }
+      .wrap {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        text-align: center;
+        padding: 24px;
+      }
+      .logo { font-size: 56px; }
+      h1 { font-size: 22px; margin: 0; }
+      p { margin: 0; max-width: 320px; font-size: 14px; opacity: 0.85; }
+      .spin {
+        width: 28px; height: 28px; margin-top: 8px;
+        border: 3px solid rgba(106, 53, 34, 0.25);
+        border-top-color: #a4532a;
+        border-radius: 50%;
+        animation: r 0.9s linear infinite;
+      }
+      @keyframes r { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <!--
+      Trang dự phòng (fallback) của app Android (Capacitor).
+      Khi đặt CAP_SERVER_URL, WebView sẽ tải thẳng web app đã deploy thay cho trang này.
+      Trang này chỉ hiện khi chưa cấu hình server.url hoặc không kết nối được máy chủ.
+    -->
+    <div class="wrap">
+      <div class="logo">🧋</div>
+      <h1>Boba Ship</h1>
+      <p>Đang kết nối tới máy chủ… Nếu mãi không vào được, hãy kiểm tra cấu hình
+        <b>server.url</b> (CAP_SERVER_URL) và kết nối mạng.</p>
+      <div class="spin"></div>
+    </div>
+  </body>
+</html>

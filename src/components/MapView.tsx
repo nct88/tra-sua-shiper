@@ -9,8 +9,10 @@ import {
   Popup,
   useMap,
   useMapEvents,
+  AttributionControl,
 } from "react-leaflet";
 import L from "leaflet";
+import { RIDER_SVG, WAVER_SVG } from "./mapMarkers";
 
 export type MapMarker = {
   lat: number;
@@ -19,20 +21,34 @@ export type MapMarker = {
   label?: string;
 };
 
-const ICONS: Record<string, string> = {
-  store: "🏪",
-  shipper: "🛵",
-  dropoff: "📍",
-};
-
 function makeIcon(type: MapMarker["type"]) {
-  const pulse = type === "shipper" ? "shipper-dot" : "";
+  // Shiper: xe có người lái (animation); điểm giao của khách: nhân vật vẫy tay
+  // (animation). Không viền/đĩa nền — hình ngồi thẳng trên bản đồ.
+  if (type === "shipper") {
+    return L.divIcon({
+      className: "",
+      html: RIDER_SVG,
+      iconSize: [32, 28],
+      iconAnchor: [16, 25],
+      popupAnchor: [0, -24],
+    });
+  }
+  if (type === "dropoff") {
+    return L.divIcon({
+      className: "",
+      html: WAVER_SVG,
+      iconSize: [24, 30],
+      iconAnchor: [12, 28],
+      popupAnchor: [0, -28],
+    });
+  }
+  // Cửa hàng: emoji không viền, thêm bóng đổ để vẫn nổi trên bản đồ.
   return L.divIcon({
     className: "",
-    html: `<div class="${pulse}" style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9999px;background:white;border:2px solid #c06a34;box-shadow:0 2px 6px rgba(0,0,0,.3);font-size:20px">${ICONS[type]}</div>`,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
-    popupAnchor: [0, -20],
+    html: `<div style="font-size:20px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))">🏪</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 19],
+    popupAnchor: [0, -18],
   });
 }
 
@@ -102,6 +118,19 @@ export default function MapView({
   const shipper = markers.find((m) => m.type === "shipper");
   const fitPoints: [number, number][] = markers.map((m) => [m.lat, m.lng]);
 
+  // OSRM snap tuyến vào đường giao thông gần nhất nên điểm đầu/cuối tuyến lệch
+  // khỏi toạ độ thật của quán & điểm giao. Nối thêm 2 đầu vào đúng marker để
+  // đường vẽ chạm chính xác vị trí quán (đầu) và khách (cuối).
+  const store = markers.find((m) => m.type === "store");
+  const dropoff = markers.find((m) => m.type === "dropoff");
+  const displayRoute = useMemo<[number, number][]>(() => {
+    if (routeLatLng.length === 0) return [];
+    const pts = [...routeLatLng];
+    if (store) pts.unshift([store.lat, store.lng]);
+    if (dropoff) pts.push([dropoff.lat, dropoff.lng]);
+    return pts;
+  }, [routeLatLng, store?.lat, store?.lng, dropoff?.lat, dropoff?.lng]);
+
   const defaultCenter: [number, number] =
     center || (markers[0] ? [markers[0].lat, markers[0].lng] : [21.028, 105.85]);
 
@@ -110,15 +139,18 @@ export default function MapView({
       center={defaultCenter}
       zoom={zoom}
       style={{ height, width: "100%", borderRadius: "0.75rem", zIndex: 0 }}
-      scrollWheelZoom
+      scrollWheelZoom={false}
+      attributionControl={false}
     >
+      {/* Ẩn nhãn "Leaflet" (prefix=false); giữ ghi công OSM theo giấy phép ODbL */}
+      <AttributionControl position="bottomright" prefix={false} />
       <TileLayer
         attribution='&copy; OpenStreetMap'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {routeLatLng.length > 1 && (
-        <Polyline positions={routeLatLng} pathOptions={{ color: "#c06a34", weight: 5, opacity: 0.7 }} />
+      {displayRoute.length > 1 && (
+        <Polyline positions={displayRoute} pathOptions={{ color: "#c06a34", weight: 5, opacity: 0.7 }} />
       )}
       {trailLatLng.length > 1 && (
         <Polyline

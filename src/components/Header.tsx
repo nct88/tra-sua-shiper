@@ -72,7 +72,7 @@ export default function Header({
   }
 
   return (
-    <header className="sticky top-0 z-[1000] flex items-center justify-between border-b border-boba-200 bg-white/90 px-3 py-2 backdrop-blur">
+    <header className="safe-top sticky top-0 z-[1000] flex items-center justify-between border-b border-boba-200 bg-white/95 px-3 py-2 backdrop-blur">
       <div className="flex items-center gap-2">
         <Link href="/" className="text-lg font-bold text-boba-700">
           🧋 Boba Ship
@@ -95,18 +95,18 @@ export default function Header({
         <div className="relative">
           <button
             onClick={toggle}
-            className="relative rounded-full p-1.5 hover:bg-boba-100"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full text-lg hover:bg-boba-100"
             aria-label="Thông báo"
           >
             🔔
             {unread > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+              <span className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
                 {unread}
               </span>
             )}
           </button>
           {open && (
-            <div className="absolute right-0 mt-2 max-h-96 w-80 overflow-auto rounded-xl border border-boba-200 bg-white shadow-xl">
+            <div className="absolute right-0 mt-2 max-h-[70vh] w-[calc(100vw-1.5rem)] max-w-sm overflow-auto rounded-xl border border-boba-200 bg-white shadow-xl">
               <div className="border-b px-4 py-2 font-semibold text-boba-700">
                 Thông báo
               </div>
@@ -136,7 +136,7 @@ export default function Header({
         </div>
         <button
           onClick={logout}
-          className="rounded-lg border border-boba-300 px-2.5 py-1 text-xs text-boba-700 hover:bg-boba-100"
+          className="flex h-9 items-center rounded-lg border border-boba-300 px-3 text-sm text-boba-700 hover:bg-boba-100"
         >
           Đăng xuất
         </button>

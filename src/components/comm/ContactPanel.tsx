@@ -16,13 +16,16 @@ export default function ContactPanel({
 
   return (
     <div className="space-y-2">
-      <CallPanel orderId={orderId} peerName={peerName} />
-      <button
-        onClick={() => setOpenChat(true)}
-        className="btn-ghost w-full text-sm"
-      >
-        💬 Nhắn tin với {peerName}
-      </button>
+      {/* Gọi và nhắn tin xếp 2 cột cho gọn (ẩn số điện thoại, liên lạc trong app) */}
+      <div className="grid grid-cols-2 items-start gap-2">
+        <CallPanel orderId={orderId} />
+        <button
+          onClick={() => setOpenChat(true)}
+          className="btn-ghost w-full text-sm"
+        >
+          💬 Nhắn tin
+        </button>
+      </div>
 
       {/* Cửa sổ chat lớn: full màn hình trên điện thoại, hộp lớn trên màn rộng */}
       {openChat && (

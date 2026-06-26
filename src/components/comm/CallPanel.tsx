@@ -12,10 +12,8 @@ const ICE_SERVERS: RTCConfiguration = {
 
 export default function CallPanel({
   orderId,
-  peerName,
 }: {
   orderId: string;
-  peerName: string;
 }) {
   const [state, setState] = useState<CallState>("idle");
   const [seconds, setSeconds] = useState(0);
@@ -209,40 +207,40 @@ export default function CallPanel({
   ).padStart(2, "0")}`;
 
   return (
-    <div className="rounded-xl border border-boba-200 bg-white p-3">
+    <div className="flex flex-col">
       <audio ref={audioRef} autoPlay />
       {err && <p className="mb-2 text-xs text-red-500">{err}</p>}
 
       {state === "idle" && (
         <button
           onClick={startCall}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-2 font-medium text-white hover:bg-green-700"
+          className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg bg-green-600 px-3 font-medium text-white hover:bg-green-700"
         >
-          📞 Gọi {peerName} (trong app)
+          📞 Gọi
         </button>
       )}
 
       {state === "calling" && (
-        <div className="flex items-center justify-between">
-          <span className="animate-pulse text-sm text-boba-700">
-            📞 Đang gọi {peerName}…
+        <div className="space-y-1.5">
+          <span className="block animate-pulse text-center text-sm text-boba-700">
+            📞 Đang gọi…
           </span>
-          <button onClick={hangup} className="rounded-lg bg-red-500 px-3 py-1.5 text-sm text-white">
+          <button onClick={hangup} className="min-h-[44px] w-full rounded-lg bg-red-500 px-3 text-sm font-medium text-white">
             Huỷ
           </button>
         </div>
       )}
 
       {state === "ringing" && (
-        <div className="flex items-center justify-between">
-          <span className="animate-pulse text-sm font-medium text-green-700">
-            📲 {peerName} đang gọi…
+        <div className="space-y-1.5">
+          <span className="block animate-pulse text-center text-sm font-medium text-green-700">
+            📲 Cuộc gọi đến…
           </span>
-          <div className="flex gap-2">
-            <button onClick={accept} className="rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white">
+          <div className="grid grid-cols-2 gap-1.5">
+            <button onClick={accept} className="min-h-[44px] rounded-lg bg-green-600 px-2 text-sm font-medium text-white">
               Nghe
             </button>
-            <button onClick={reject} className="rounded-lg bg-red-500 px-3 py-1.5 text-sm text-white">
+            <button onClick={reject} className="min-h-[44px] rounded-lg bg-red-500 px-2 text-sm font-medium text-white">
               Từ chối
             </button>
           </div>
@@ -250,13 +248,13 @@ export default function CallPanel({
       )}
 
       {state === "connected" && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-green-700">🟢 Đang gọi · {mmss}</span>
-          <div className="flex gap-2">
-            <button onClick={toggleMute} className="btn-ghost text-sm">
-              {muted ? "🔇 Bật mic" : "🎙 Tắt mic"}
+        <div className="space-y-1.5">
+          <span className="block text-center text-sm text-green-700">🟢 {mmss}</span>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button onClick={toggleMute} className="min-h-[44px] rounded-lg border border-boba-300 px-2 text-sm text-boba-700">
+              {muted ? "🔇" : "🎙"}
             </button>
-            <button onClick={hangup} className="rounded-lg bg-red-500 px-3 py-1.5 text-sm text-white">
+            <button onClick={hangup} className="min-h-[44px] rounded-lg bg-red-500 px-2 text-sm font-medium text-white">
               Kết thúc
             </button>
           </div>

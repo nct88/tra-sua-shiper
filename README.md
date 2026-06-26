@@ -81,6 +81,18 @@ npm run dev   # http://localhost:3000
    cảnh báo giờ giao → sau khi giao xong thì **Đánh giá & Tip**.
 4. **Admin** xem toàn bộ đơn, quản lý khách/shiper, đưa vào/gỡ danh sách đen.
 
+## Chạy thử khi CHỈ có điện thoại (GitHub Codespaces)
+
+Không cần máy tính — chạy mọi thứ trên đám mây qua trình duyệt điện thoại, có link HTTPS nên GPS & gọi điện đều hoạt động:
+
+1. Mở repo trên GitHub (trình duyệt điện thoại) → chọn nhánh `claude/boba-delivery-tracking-4t1nse`.
+2. Bấm **Code → Codespaces → Create codespace**. Chờ máy ảo khởi tạo (đã tự cài đặt + tạo DB nhờ `.devcontainer`).
+3. Mở terminal trong Codespace, gõ: `npm run dev`
+4. Tab **Ports** → cổng **3000** → đặt **Public** → mở link `https://...app.github.dev`.
+5. Mở link đó ở tab mới trên điện thoại, cho phép **Micro** (gọi điện) + **Vị trí** (GPS). Đăng nhập bằng tài khoản demo.
+
+> Mẹo: mở thêm 1 tab vai trò khác (hoặc nhờ người thứ 2) để demo khách ↔ shiper realtime.
+
 ## Ghi chú kỹ thuật
 
 - **Định tuyến OSRM**: dùng API công cộng `router.project-osrm.org`. Nếu mạng

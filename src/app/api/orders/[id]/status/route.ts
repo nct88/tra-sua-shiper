@@ -29,10 +29,17 @@ export async function POST(
   if (next === "DELIVERING") data.deliveringAt = now;
   if (next === "DELIVERED") data.deliveredAt = now;
 
-  const updated = await prisma.order.update({
-    where: { id: order.id },
+  // Tiến trạng thái NGUYÊN TỬ: chỉ cập nhật nếu trạng thái vẫn đúng như lúc đọc.
+  // Nếu count === 0 nghĩa là một request song song vừa tiến trạng thái -> từ chối
+  // để tránh nhảy 2 bước & chạy phần thưởng (uy tín/điểm) hai lần.
+  const advanced = await prisma.order.updateMany({
+    where: { id: order.id, status: order.status },
     data,
   });
+  if (advanced.count === 0) {
+    return fail("Trạng thái đơn vừa thay đổi, vui lòng tải lại", 409);
+  }
+  const updated = await prisma.order.findUnique({ where: { id: order.id } });
 
   // Khi giao xong: cập nhật chỉ số shiper + điểm thân thiết khách
   if (next === "DELIVERED" && order.shipperId) {

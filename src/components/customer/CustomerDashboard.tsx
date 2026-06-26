@@ -241,7 +241,12 @@ export default function CustomerDashboard() {
                 { lat: drop.lat, lng: drop.lng, type: "dropoff", label: "Điểm giao" },
               ]}
               pickMode
-              onPick={(lat, lng) => setDrop({ lat, lng })}
+              onPick={(lat, lng) => {
+                setDrop({ lat, lng });
+                if (!address.trim()) {
+                  setAddress(`Vị trí đã chọn (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
+                }
+              }}
               center={[drop.lat, drop.lng]}
               zoom={14}
             />

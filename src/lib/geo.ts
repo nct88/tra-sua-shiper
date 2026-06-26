@@ -28,11 +28,15 @@ export async function fetchRoute(
   to: LngLat
 ): Promise<RouteResult> {
   const url = `https://router.project-osrm.org/route/v1/driving/${from[0]},${from[1]};${to[0]},${to[1]}?overview=full&geometries=geojson`;
+  // Hủy yêu cầu sau 5s để tránh treo khi mạng tới OSRM bị nghẽn
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "tra-sua-shiper/1.0" },
       // tránh cache cứng
       cache: "no-store",
+      signal: controller.signal,
     });
     if (!res.ok) throw new Error("OSRM " + res.status);
     const data = await res.json();
@@ -51,6 +55,8 @@ export async function fetchRoute(
       distanceMeters: dist,
       durationSeconds: Math.round((dist / 1000 / 25) * 3600),
     };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

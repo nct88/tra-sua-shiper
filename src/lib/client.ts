@@ -1,9 +1,25 @@
 "use client";
 
+// Đọc body an toàn: nếu không phải JSON (vd trang HTML do proxy/Codespaces trả về)
+// thì báo lỗi dễ hiểu thay vì "Unexpected token '<'".
+async function parseJson(res: Response) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (res.status === 401) throw new Error("Bạn cần đăng nhập lại.");
+    throw new Error(
+      "Máy chủ trả về phản hồi không hợp lệ (HTTP " +
+        res.status +
+        "). Nếu đang dùng GitHub Codespaces, hãy mở tab Ports và đặt cổng 3000 ở chế độ Public."
+    );
+  }
+}
+
 // Gọi API trả về { ok, data } | { ok:false, error }
 export async function apiGet<T = any>(url: string): Promise<T> {
-  const res = await fetch(url, { cache: "no-store" });
-  const json = await res.json();
+  const res = await fetch(url, { cache: "no-store", credentials: "same-origin" });
+  const json = await parseJson(res);
   if (!json.ok) throw new Error(json.error || "Lỗi không xác định");
   return json.data as T;
 }
@@ -15,10 +31,11 @@ export async function apiSend<T = any>(
 ): Promise<T> {
   const res = await fetch(url, {
     method,
+    credentials: "same-origin",
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  const json = await res.json();
+  const json = await parseJson(res);
   if (!json.ok) throw new Error(json.error || "Lỗi không xác định");
   return json.data as T;
 }

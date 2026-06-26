@@ -46,6 +46,9 @@ danh sách đen.
 | 🟢 Realtime (SSE) | Thông báo đẩy tức thì qua Server-Sent Events (fallback polling) |
 | 🗂️ Admin xem chat | Quản trị xem lịch sử chat của đơn để xử lý khiếu nại |
 | 🏪 POS cửa hàng | Nhân viên tạo đơn tại quầy/giao hàng, chọn món nhanh, thu tiền, tự tạo khách theo SĐT |
+| 👷 Vai trò Nhân viên | Tài khoản thu ngân (STAFF) riêng, chỉ vào màn hình POS |
+| 🕒 Ca làm việc & chốt ca | Mở ca (quỹ đầu), số liệu chạy realtime, chốt ca ra báo cáo Z (doanh thu, theo phương thức, tiền mặt dự kiến trong két) |
+| 🧾 In hoá đơn | Hoá đơn in được kèm QR theo dõi (giao hàng) / mã đơn (tại quầy) |
 
 ## Chạy ở máy local
 
@@ -69,6 +72,7 @@ npm run dev   # http://localhost:3000
 | Vai trò | Số điện thoại |
 |---------|---------------|
 | Admin | `0900000000` |
+| Nhân viên (POS) | `0908000000` |
 | Khách hàng | `0911111111` |
 | Shiper | `0922222222` |
 

@@ -126,6 +126,22 @@ model Order {
   rating       Rating?
   locationPings LocationPing[]
   messages      Message[]
+
+  // Ca làm việc POS (đơn tạo tại quầy/giao hàng qua POS)
+  shiftId String?
+  shift   Shift?  @relation(fields: [shiftId], references: [id])
+}
+
+// Ca làm việc của nhân viên POS (mở ca - chốt ca/Z-report)
+model Shift {
+  id          String    @id @default(cuid())
+  staffId     String
+  openedAt    DateTime  @default(now())
+  closedAt    DateTime?
+  openingCash Float     @default(0)
+  status      String    @default("OPEN") // OPEN | CLOSED
+  note        String?
+  orders      Order[]
 }
 
 // Lịch sử vị trí của shiper theo từng đơn (vẽ tuyến thực tế / realtime)

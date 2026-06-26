@@ -1,7 +1,15 @@
 // Các giá trị "enum" dạng string (SQLite không hỗ trợ enum thật)
 
-export const ROLES = ["CUSTOMER", "SHIPPER", "ADMIN"] as const;
+export const ROLES = ["CUSTOMER", "SHIPPER", "ADMIN", "STAFF"] as const;
 export type Role = (typeof ROLES)[number];
+
+// Trang chủ mặc định theo vai trò
+export function roleHome(role: string): string {
+  if (role === "ADMIN") return "/admin";
+  if (role === "SHIPPER") return "/shipper";
+  if (role === "STAFF") return "/pos";
+  return "/customer";
+}
 
 export const ORDER_STATUSES = [
   "PENDING",

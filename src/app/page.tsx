@@ -3,13 +3,12 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import AuthForm from "@/components/AuthForm";
 import { SUPPORT } from "@/lib/site";
+import { roleHome } from "@/lib/constants";
 
 export default async function HomePage() {
   const session = await getSession();
   if (session) {
-    if (session.role === "ADMIN") redirect("/admin");
-    if (session.role === "SHIPPER") redirect("/shipper");
-    redirect("/customer");
+    redirect(roleHome(session.role));
   }
 
   return (

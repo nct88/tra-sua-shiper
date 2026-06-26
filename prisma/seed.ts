@@ -19,6 +19,18 @@ async function main() {
     },
   });
 
+  // Nhân viên thu ngân (POS)
+  await prisma.user.upsert({
+    where: { phone: "0908000000" },
+    update: {},
+    create: {
+      name: "Thu ngân Quầy",
+      phone: "0908000000",
+      passwordHash: pass,
+      role: "STAFF",
+    },
+  });
+
   // Khách hàng
   await prisma.user.upsert({
     where: { phone: "0911111111" },
@@ -107,9 +119,10 @@ async function main() {
   }
 
   console.log("✅ Seed xong! Tài khoản demo (mật khẩu 123456):");
-  console.log("   Admin:  0900000000");
-  console.log("   Khách:  0911111111");
-  console.log("   Shiper: 0922222222");
+  console.log("   Admin:    0900000000");
+  console.log("   Nhân viên: 0908000000");
+  console.log("   Khách:    0911111111");
+  console.log("   Shiper:   0922222222");
 }
 
 main()

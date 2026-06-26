@@ -34,6 +34,22 @@ body {
   font-family: inherit;
 }
 
+/* In hoá đơn POS: chỉ in phần #pos-receipt */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #pos-receipt,
+  #pos-receipt * {
+    visibility: visible;
+  }
+  #pos-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
+
 /* Marker shiper nhấp nháy */
 @keyframes pulse-ring {
   0% { transform: scale(0.7); opacity: 0.8; }

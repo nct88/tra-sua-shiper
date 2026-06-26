@@ -7,7 +7,7 @@ import { apiSend } from "@/lib/client";
 export default function AuthForm() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [role, setRole] = useState<"CUSTOMER" | "SHIPPER">("CUSTOMER");
+  const [role, setRole] = useState<"CUSTOMER" | "SHIPPER" | "STAFF">("CUSTOMER");
   const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,6 +15,7 @@ export default function AuthForm() {
   function dest(r: string) {
     if (r === "ADMIN") return "/admin";
     if (r === "SHIPPER") return "/shipper";
+    if (r === "STAFF") return "/pos";
     return "/customer";
   }
 
@@ -78,18 +79,18 @@ export default function AuthForm() {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
             <div className="flex gap-2">
-              {(["CUSTOMER", "SHIPPER"] as const).map((r) => (
+              {(["CUSTOMER", "SHIPPER", "STAFF"] as const).map((r) => (
                 <button
                   type="button"
                   key={r}
                   onClick={() => setRole(r)}
-                  className={`flex-1 rounded-lg border py-2 text-sm ${
+                  className={`flex-1 rounded-lg border py-2 text-xs ${
                     role === r
                       ? "border-boba-500 bg-boba-50 font-semibold text-boba-700"
                       : "border-gray-200 text-gray-500"
                   }`}
                 >
-                  {r === "CUSTOMER" ? "🧋 Khách hàng" : "🛵 Shiper"}
+                  {r === "CUSTOMER" ? "🧋 Khách" : r === "SHIPPER" ? "🛵 Shiper" : "🏪 Nhân viên"}
                 </button>
               ))}
             </div>

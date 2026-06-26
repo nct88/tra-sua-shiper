@@ -54,11 +54,17 @@ async function resolveCustomer(name?: string, phone?: string) {
 
 // POS: nhân viên cửa hàng tạo đơn (giao hàng hoặc bán tại quầy)
 export async function POST(req: NextRequest) {
-  const auth = await requireUser(["ADMIN"]);
+  const auth = await requireUser(["ADMIN", "STAFF"]);
   if (auth.error) return auth.error;
 
   const b = await req.json().catch(() => null);
   if (!b) return fail("Dữ liệu không hợp lệ");
+
+  // Gắn đơn vào ca đang mở (nếu có) để chốt ca/Z-report
+  const openShift = await prisma.shift.findFirst({
+    where: { staffId: auth.user.id, status: "OPEN" },
+  });
+  const shiftId = openShift?.id ?? null;
 
   const mode = b.mode === "COUNTER" ? "COUNTER" : "DELIVERY";
   const items = (b.items || []) as { id: string; qty: number }[];
@@ -121,6 +127,7 @@ export async function POST(req: NextRequest) {
         paymentStatus: "PAID",
         paidAt: now,
         deliveredAt: now,
+        shiftId,
       },
     });
 
@@ -180,6 +187,7 @@ export async function POST(req: NextRequest) {
       paymentStatus: paid ? "PAID" : "UNPAID",
       paidAt: paid ? now : null,
       shareToken: randomToken(),
+      shiftId,
     },
   });
 

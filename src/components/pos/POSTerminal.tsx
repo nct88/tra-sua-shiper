@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { apiGet, apiSend, formatVnd } from "@/lib/client";
-import { DRINKS, STORE, lineUnitPrice, lineLabel } from "@/lib/menu";
+import { MENU_GROUPS, STORE, lineUnitPrice, lineLabel } from "@/lib/menu";
 import { type CartLine, addLine, setLineQty, cartSubtotal, cartCount, toOrderItems } from "@/lib/cart";
 import { PAYMENT_METHODS, paymentLabel } from "@/lib/site";
 import ItemCustomizer from "@/components/ItemCustomizer";
@@ -165,18 +165,29 @@ export default function POSTerminal() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
-        {/* Lưới món */}
-        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3">
-          {DRINKS.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setCustomizing(m.id)}
-              className="flex min-h-[110px] flex-col items-start rounded-xl border border-boba-200 bg-white p-2.5 text-left hover:border-boba-400 hover:shadow"
-            >
-              <span className="text-2xl">{m.emoji}</span>
-              <span className="mt-1 text-sm font-medium leading-tight text-boba-900">{m.name}</span>
-              <span className="text-sm font-bold text-boba-700">{formatVnd(m.price)}</span>
-            </button>
+        {/* Lưới món theo danh mục */}
+        <section className="space-y-3">
+          {MENU_GROUPS.map((g) => (
+            <div key={g.category} className="space-y-1.5">
+              <div className="text-sm font-bold text-boba-700">{g.category}</div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3">
+                {g.items.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() =>
+                      m.kind === "food"
+                        ? setLines((ls) => addLine(ls, { drinkId: m.id, size: "", toppings: [], qty: 1 }))
+                        : setCustomizing(m.id)
+                    }
+                    className="flex min-h-[110px] flex-col items-start rounded-xl border border-boba-200 bg-white p-2.5 text-left hover:border-boba-400 hover:shadow"
+                  >
+                    <span className="text-2xl">{m.emoji}</span>
+                    <span className="mt-1 text-sm font-medium leading-tight text-boba-900">{m.name}</span>
+                    <span className="text-sm font-bold text-boba-700">{formatVnd(m.price)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </section>
 

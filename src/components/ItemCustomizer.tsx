@@ -54,7 +54,7 @@ export default function ItemCustomizer({
         </div>
 
         <div>
-          <div className="mb-1 text-sm font-medium text-boba-700">Topping</div>
+          <div className="mb-1 text-sm font-medium text-boba-700">Món thêm</div>
           <div className="max-h-[38vh] space-y-1.5 overflow-y-auto">
             {TOPPINGS.map((t) => (
               <label key={t.id} className="flex items-center justify-between rounded-lg border border-boba-100 px-3 py-2.5 text-sm">

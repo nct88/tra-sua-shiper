@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { apiGet, apiSend, formatVnd } from "@/lib/client";
-import { DRINKS, STORE, lineUnitPrice, lineLabel } from "@/lib/menu";
+import { STORE, lineUnitPrice, lineLabel } from "@/lib/menu";
 import { type CartLine, addLine, setLineQty, cartSubtotal, cartCount, toOrderItems } from "@/lib/cart";
 import { TIER_LABEL } from "@/lib/business";
 import { PAYMENT_METHODS, paymentLabel, paymentIcon } from "@/lib/site";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StarsInput } from "@/components/Stars";
 import ItemCustomizer from "@/components/ItemCustomizer";
+import MenuBrowser from "@/components/customer/MenuBrowser";
 import PaymentModal from "@/components/payment/PaymentModal";
 import Map from "@/components/Map";
 
@@ -181,21 +182,13 @@ export default function CustomerDashboard() {
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Đặt món */}
         <section className="card space-y-3">
-          <h2 className="text-lg font-bold text-boba-800">🧋 Thực đơn</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {DRINKS.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setCustomizing(m.id)}
-                className="flex flex-col items-start rounded-lg border border-boba-100 p-2 text-left hover:border-boba-400"
-              >
-                <span className="text-xl">{m.emoji}</span>
-                <span className="text-sm font-medium leading-tight">{m.name}</span>
-                <span className="text-sm font-semibold text-boba-700">{formatVnd(m.price)}</span>
-                <span className="text-[10px] text-boba-500">Chọn size/topping →</span>
-              </button>
-            ))}
-          </div>
+          <MenuBrowser
+            onSelect={(m) =>
+              m.kind === "food"
+                ? setLines((ls) => addLine(ls, { drinkId: m.id, size: "", toppings: [], qty: 1 }))
+                : setCustomizing(m.id)
+            }
+          />
 
           {/* Giỏ hàng (dòng có size/topping) */}
           {lines.length > 0 && (

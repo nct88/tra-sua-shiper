@@ -40,9 +40,8 @@ export async function apiSend<T = any>(
   return json.data as T;
 }
 
-export function formatVnd(n: number): string {
-  return new Intl.NumberFormat("vi-VN").format(Math.round(n || 0)) + "đ";
-}
+// formatVnd dùng chung từ một nguồn duy nhất (re-export để các import cũ vẫn chạy)
+export { formatVnd } from "./format";
 
 export function fmtDuration(seconds: number | null | undefined): string {
   if (seconds == null) return "—";

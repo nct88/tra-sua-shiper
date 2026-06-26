@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // ESLint chưa cấu hình -> bỏ qua khi build (TypeScript vẫn được kiểm tra)
+  // Lint chạy riêng ở CI (npm run lint) để build nhanh hơn; TypeScript vẫn được
+  // kiểm tra khi build.
   eslint: { ignoreDuringBuilds: true },
 };
 

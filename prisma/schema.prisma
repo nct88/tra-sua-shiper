@@ -1,0 +1,256 @@
+// Prisma schema cho hệ thống giao trà sữa
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite không hỗ trợ enum -> dùng String. Giá trị hợp lệ định nghĩa trong src/lib/constants.ts
+// Role: CUSTOMER | SHIPPER | ADMIN
+// OrderStatus: PENDING | ACCEPTED | PICKED_UP | DELIVERING | DELIVERED | CANCELLED
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String   @unique
+  email        String?  @unique
+  passwordHash String
+  role         String   @default("CUSTOMER")
+  createdAt    DateTime @default(now())
+
+  customerProfile CustomerProfile?
+  shipperProfile  ShipperProfile?
+
+  ordersAsCustomer Order[]        @relation("CustomerOrders")
+  ordersAsShipper  Order[]        @relation("ShipperOrders")
+  ratingsGiven     Rating[]       @relation("RatingsByCustomer")
+  ratingsReceived  Rating[]       @relation("RatingsForShipper")
+  notifications    Notification[]
+  blacklistEntries Blacklist[]    @relation("BlacklistedUser")
+  blacklistsMade   Blacklist[]    @relation("BlacklistCreatedBy")
+  messagesSent     Message[]      @relation("MessageSender")
+}
+
+// Hồ sơ khách hàng: điểm thân thiết, tổng đơn, trạng thái VIP
+model CustomerProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loyaltyPoints Int      @default(0)
+  totalOrders   Int      @default(0)
+  totalSpent    Float    @default(0)
+  tier          String   @default("MOI") // MOI, BAC, VANG, KIM_CUONG
+  defaultAddress String?
+  defaultLat    Float?
+  defaultLng    Float?
+  updatedAt     DateTime @updatedAt
+}
+
+// Hồ sơ shiper: chỉ số đánh giá, vị trí hiện tại, trạng thái online
+model ShipperProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle         String   @default("Xe máy")
+  plateNumber     String?
+  isOnline        Boolean  @default(false)
+  currentLat      Float?
+  currentLng      Float?
+  ratingAvg       Float    @default(5)
+  ratingCount     Int      @default(0)
+  completedOrders Int      @default(0)
+  cancelledOrders Int      @default(0)
+  totalTips       Float    @default(0)
+  // Chỉ số uy tín tổng hợp 0-100
+  reputationScore Float    @default(80)
+  updatedAt       DateTime @updatedAt
+}
+
+model Order {
+  id        String @id @default(cuid())
+  code      String @unique
+  status    String @default("PENDING")
+
+  customerId String
+  customer   User   @relation("CustomerOrders", fields: [customerId], references: [id])
+  shipperId  String?
+  shipper    User?  @relation("ShipperOrders", fields: [shipperId], references: [id])
+
+  itemsJson String // JSON các món trà sữa
+  subtotal  Float
+  shippingFee Float @default(15000)
+  discount  Float  @default(0)
+  voucherCode String?
+  total     Float
+
+  // Điểm lấy hàng (quán)
+  pickupName String
+  pickupAddress String
+  pickupLat  Float
+  pickupLng  Float
+
+  // Điểm giao (khách)
+  dropoffAddress String
+  dropoffLat     Float
+  dropoffLng     Float
+  note           String?
+
+  // Tuyến đường & thời gian
+  routeJson        String? // GeoJSON coordinates [[lng,lat],...]
+  distanceMeters   Float?
+  estimatedSeconds Int? // thời gian dự kiến giao
+  deadlineAt       DateTime? // hạn giao -> dùng để cảnh báo trễ
+
+  tip       Float    @default(0)
+
+  // Thanh toán: CASH | BANK | CARD | ZALOPAY | MOMO
+  paymentMethod String  @default("CASH")
+  paymentStatus String  @default("UNPAID") // UNPAID | PAID | REFUNDED
+  paidAt        DateTime?
+  refundedAt    DateTime?
+
+  // Link chia sẻ theo dõi công khai (không cần đăng nhập)
+  shareToken String? @unique
+
+  createdAt DateTime @default(now())
+  acceptedAt  DateTime?
+  pickedUpAt  DateTime?
+  deliveringAt DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+  cancelReason String?
+
+  rating       Rating?
+  locationPings LocationPing[]
+  messages      Message[]
+
+  // Ca làm việc POS (đơn tạo tại quầy/giao hàng qua POS)
+  shiftId String?
+  shift   Shift?  @relation(fields: [shiftId], references: [id])
+}
+
+// Ca làm việc của nhân viên POS (mở ca - chốt ca/Z-report)
+model Shift {
+  id          String    @id @default(cuid())
+  staffId     String
+  openedAt    DateTime  @default(now())
+  closedAt    DateTime?
+  openingCash Float     @default(0)
+  status      String    @default("OPEN") // OPEN | CLOSED
+  note        String?
+  orders      Order[]
+}
+
+// Lịch sử vị trí của shiper theo từng đơn (vẽ tuyến thực tế / realtime)
+model LocationPing {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model Rating {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   User     @relation("RatingsByCustomer", fields: [customerId], references: [id])
+  shipperId  String
+  shipper    User     @relation("RatingsForShipper", fields: [shipperId], references: [id])
+  stars      Int // 1-5
+  comment    String?
+  tip        Float    @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // ORDER, WARNING, RATING, SYSTEM
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+// Tin nhắn trong app giữa khách và shiper theo từng đơn
+model Message {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id])
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+// Kênh tín hiệu cho cuộc gọi WebRTC trong app (offer/answer/ice/hangup...)
+model CallSignal {
+  id        String   @id @default(cuid())
+  orderId   String
+  fromId    String
+  toId      String
+  type      String // ring | offer | answer | ice | hangup | reject
+  payload   String   @default("") // JSON: SDP hoặc ICE candidate
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([orderId, toId, consumed])
+}
+
+// Mã giảm giá / khuyến mãi
+model Voucher {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  description   String
+  discountType  String // PERCENT | AMOUNT
+  discountValue Float
+  minOrder      Float    @default(0)
+  maxDiscount   Float? // trần giảm cho loại PERCENT
+  minTier       String   @default("MOI") // hạng tối thiểu: MOI|BAC|VANG|KIM_CUONG
+  usageLimit    Int? // tổng lượt dùng (null = không giới hạn)
+  usedCount     Int      @default(0)
+  perUserLimit  Int      @default(1)
+  active        Boolean  @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  redemptions VoucherRedemption[]
+}
+
+model VoucherRedemption {
+  id        String   @id @default(cuid())
+  voucherId String
+  voucher   Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  userId    String
+  orderId   String
+  createdAt DateTime @default(now())
+
+  @@index([voucherId, userId])
+}
+
+// Danh sách đen: admin chặn khách / shiper
+model Blacklist {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("BlacklistedUser", fields: [userId], references: [id], onDelete: Cascade)
+  reason      String
+  createdById String
+  createdBy   User     @relation("BlacklistCreatedBy", fields: [createdById], references: [id])
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}

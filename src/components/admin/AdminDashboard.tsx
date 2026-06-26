@@ -6,6 +6,7 @@ import { apiGet, apiSend, formatVnd } from "@/lib/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StarsDisplay } from "@/components/Stars";
 import { TIER_LABEL, reputationLabel } from "@/lib/business";
+import { paymentLabel, paymentIcon } from "@/lib/site";
 
 type Order = {
   id: string;
@@ -15,6 +16,8 @@ type Order = {
   tip: number;
   dropoffAddress: string;
   createdAt: string;
+  paymentMethod: string;
+  paymentStatus: string;
   customer?: { name: string } | null;
   shipper?: { name: string } | null;
 };
@@ -118,6 +121,14 @@ export default function AdminDashboard() {
                 <div className="text-xs text-gray-500">
                   {o.customer?.name} → {o.dropoffAddress}
                   {o.shipper ? ` • Shiper: ${o.shipper.name}` : " • chưa có shiper"}
+                </div>
+                <div className="text-xs">
+                  {paymentIcon(o.paymentMethod)} {paymentLabel(o.paymentMethod)} ·{" "}
+                  {o.paymentStatus === "PAID" ? (
+                    <span className="text-green-600">Đã thanh toán</span>
+                  ) : (
+                    <span className="text-amber-600">Chưa thanh toán</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3">

@@ -103,6 +103,12 @@ model Order {
   deadlineAt       DateTime? // hạn giao -> dùng để cảnh báo trễ
 
   tip       Float    @default(0)
+
+  // Thanh toán: CASH | BANK | CARD | ZALOPAY | MOMO
+  paymentMethod String  @default("CASH")
+  paymentStatus String  @default("UNPAID") // UNPAID | PAID
+  paidAt        DateTime?
+
   createdAt DateTime @default(now())
   acceptedAt  DateTime?
   pickedUpAt  DateTime?

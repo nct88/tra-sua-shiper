@@ -32,6 +32,9 @@ danh sách đen.
 | 💬 Nhắn tin trong app | Chat khách ↔ shiper theo đơn, có câu trả lời nhanh, thông báo tin mới |
 | 📞 Gọi điện trong app | Gọi thoại WebRTC ngay trong app, không cần lộ số điện thoại |
 | 🔒 Ẩn số điện thoại | Hai bên chỉ thấy số đã che (vd `092••••22`); chỉ admin xem số đầy đủ |
+| 💳 Thanh toán (demo) | 5 hình thức: tiền mặt, chuyển khoản/VietQR, thẻ, ZaloPay, MoMo (mô phỏng) |
+| 🎧 Trang hỗ trợ | Tổng đài, hotline, email, Messenger, Telegram, Zalo, FAQ |
+| 📄 Chính sách | Quyền riêng tư, bảo mật, thanh toán, giao hàng |
 
 ## Chạy ở máy local
 

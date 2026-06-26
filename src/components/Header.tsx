@@ -67,6 +67,12 @@ export default function Header({
           🧋 Boba Ship
         </Link>
         <span className="hidden text-sm text-boba-500 sm:inline">/ {title}</span>
+        <Link
+          href="/ho-tro"
+          className="ml-2 hidden text-sm text-boba-600 hover:text-boba-800 sm:inline"
+        >
+          Hỗ trợ
+        </Link>
       </div>
 
       <div className="flex items-center gap-3">

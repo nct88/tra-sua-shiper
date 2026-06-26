@@ -67,13 +67,17 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   if (!body) return fail("Dữ liệu không hợp lệ");
-  const { items, dropoffAddress, dropoffLat, dropoffLng, note } = body as {
+  const { items, dropoffAddress, dropoffLat, dropoffLng, note, paymentMethod } = body as {
     items?: { id: string; qty: number }[];
     dropoffAddress?: string;
     dropoffLat?: number;
     dropoffLng?: number;
     note?: string;
+    paymentMethod?: string;
   };
+
+  const VALID_PAY = ["CASH", "BANK", "CARD", "ZALOPAY", "MOMO"];
+  const payMethod = VALID_PAY.includes(paymentMethod || "") ? paymentMethod! : "CASH";
 
   if (!items || items.length === 0) return fail("Giỏ hàng đang trống");
   if (
@@ -126,6 +130,8 @@ export async function POST(req: NextRequest) {
       routeJson: JSON.stringify(route.coordinates),
       distanceMeters: route.distanceMeters,
       estimatedSeconds: route.durationSeconds,
+      paymentMethod: payMethod,
+      paymentStatus: "UNPAID",
     },
   });
 

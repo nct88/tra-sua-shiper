@@ -5,8 +5,10 @@ import Link from "next/link";
 import { apiGet, apiSend, formatVnd } from "@/lib/client";
 import { MENU, STORE } from "@/lib/menu";
 import { TIER_LABEL } from "@/lib/business";
+import { PAYMENT_METHODS, paymentLabel, paymentIcon } from "@/lib/site";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StarsInput } from "@/components/Stars";
+import PaymentModal from "@/components/payment/PaymentModal";
 import Map from "@/components/Map";
 
 type Me = {
@@ -29,6 +31,8 @@ type Order = {
   itemsJson: string;
   dropoffAddress: string;
   createdAt: string;
+  paymentMethod: string;
+  paymentStatus: string;
   shipper?: { name: string } | null;
   rating?: { id: string } | null;
 };
@@ -43,6 +47,8 @@ export default function CustomerDashboard() {
   });
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
+  const [payMethod, setPayMethod] = useState("CASH");
+  const [payingOrder, setPayingOrder] = useState<{ id: string; code: string; total: number; paymentMethod: string } | null>(null);
   const [msg, setMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -89,16 +95,26 @@ export default function CustomerDashboard() {
     if (!address.trim()) return setMsg("Vui lòng nhập địa chỉ giao hàng");
     setSubmitting(true);
     try {
-      await apiSend("/api/orders", "POST", {
-        items: Object.entries(cart).map(([id, qty]) => ({ id, qty })),
-        dropoffAddress: address,
-        dropoffLat: drop.lat,
-        dropoffLng: drop.lng,
-        note,
-      });
+      const order = await apiSend<{ id: string; code: string; total: number; paymentMethod: string }>(
+        "/api/orders",
+        "POST",
+        {
+          items: Object.entries(cart).map(([id, qty]) => ({ id, qty })),
+          dropoffAddress: address,
+          dropoffLat: drop.lat,
+          dropoffLng: drop.lng,
+          note,
+          paymentMethod: payMethod,
+        }
+      );
       setCart({});
       setNote("");
-      setMsg("✅ Đặt đơn thành công! Đang chờ shiper nhận đơn.");
+      if (payMethod === "CASH") {
+        setMsg("✅ Đặt đơn thành công! Thanh toán tiền mặt khi nhận hàng.");
+      } else {
+        setMsg("✅ Đặt đơn thành công! Vui lòng hoàn tất thanh toán.");
+        setPayingOrder(order); // mở cổng thanh toán
+      }
       loadOrders();
     } catch (e: any) {
       setMsg("❌ " + e.message);
@@ -215,6 +231,29 @@ export default function CustomerDashboard() {
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
+
+          {/* Phương thức thanh toán */}
+          <div>
+            <div className="mb-1 text-sm font-medium text-boba-800">Phương thức thanh toán</div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {PAYMENT_METHODS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPayMethod(p.id)}
+                  className={`flex items-center gap-2 rounded-lg border p-2 text-left text-sm ${
+                    payMethod === p.id
+                      ? "border-boba-500 bg-boba-50 font-semibold"
+                      : "border-gray-200"
+                  }`}
+                >
+                  <span className="text-lg">{p.icon}</span>
+                  <span>{p.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex items-center justify-between border-t pt-3">
             <div>
               <div className="text-sm text-gray-500">{cartCount} món</div>
@@ -260,8 +299,35 @@ export default function CustomerDashboard() {
                     {o.dropoffAddress} • {formatVnd(o.total)}
                     {o.shipper ? ` • Shiper: ${o.shipper.name}` : ""}
                   </div>
+                  <div className="mt-1 text-xs">
+                    {paymentIcon(o.paymentMethod)} {paymentLabel(o.paymentMethod)} ·{" "}
+                    {o.paymentStatus === "PAID" ? (
+                      <span className="font-medium text-green-600">Đã thanh toán</span>
+                    ) : o.paymentMethod === "CASH" ? (
+                      <span className="text-gray-500">Trả khi nhận hàng</span>
+                    ) : (
+                      <span className="font-medium text-amber-600">Chưa thanh toán</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
+                  {o.paymentStatus !== "PAID" &&
+                    o.paymentMethod !== "CASH" &&
+                    o.status !== "CANCELLED" && (
+                      <button
+                        onClick={() =>
+                          setPayingOrder({
+                            id: o.id,
+                            code: o.code,
+                            total: o.total,
+                            paymentMethod: o.paymentMethod,
+                          })
+                        }
+                        className="btn-primary text-sm"
+                      >
+                        Thanh toán
+                      </button>
+                    )}
                   <Link href={`/track/${o.id}`} className="btn-ghost text-sm">
                     Theo dõi
                   </Link>
@@ -274,6 +340,18 @@ export default function CustomerDashboard() {
           })}
         </div>
       </section>
+
+      {payingOrder && (
+        <PaymentModal
+          order={payingOrder}
+          onClose={() => setPayingOrder(null)}
+          onPaid={() => {
+            setPayingOrder(null);
+            setMsg("✅ Thanh toán thành công!");
+            loadOrders();
+          }}
+        />
+      )}
     </main>
   );
 }
